@@ -1,11 +1,16 @@
 import React from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { SquarePen, SendHorizontal } from 'lucide-react';
+import { SquarePen } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as fetchData from "../utils/fetchData"
 import CreateTaskPopup from './createTaskPopup';
 import TaskCard from './taskCard';
+import ProjectChat from './projectChat';
+import { supabase } from '../integrations/supabase/client';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000'); // Replace with your server URL
 
 const DraggableCard = ({ id, children }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -44,7 +49,9 @@ const DroppableColumn = ({ id, title, count, color, children }) => {
 
 const ProjectDashboard = ( { project } ) => {
   // store project states below
+  const [user, setUser] = useState({})
   const [teamMembers, setTeamMembers] = useState([])
+  const [messages, setMessages] = useState([])
   const [openPopup, setOpenPopup] = useState(false)
   // task stored here in lists
   const [columns, setColumns] = React.useState({
@@ -53,9 +60,40 @@ const ProjectDashboard = ( { project } ) => {
     done: [],
   });
 
+  // send messgae to Slack Channel via the '/slack/send-message' endpoint
+  const handleMessage = async (messageText, profile_id) => {
+    try {
+      const response = await fetch('http://localhost:3000/slack/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          project_id: project.project_id,
+          text: messageText,
+          profile_id: profile_id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error sending message: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Message sent:', data.message);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  }
+
   // fetch members, tasks, chat messages etc here and store in states above
   useEffect(() => {
     const fetchProjectData = async () => {
+      // fetch USER
+      const userId = await fetchData.getUserId()
+      const user = await fetchData.selectSingle("Users", "*", "user_id", userId)
+      setUser(user)
+
       // fetch MEMBERS
       const teamMembers = await fetchData.select("Project_members", "*", "project_id", project.project_id)
       const memberProfiles = await Promise.all(teamMembers.map(async (member) => ({
@@ -82,8 +120,32 @@ const ProjectDashboard = ( { project } ) => {
       });
       // update state once
       setColumns(updatedColumns);
+
+      // fetch MESSAGES
+      try {
+        const response = await fetch(`http://localhost:3000/slack/messages?project_id=${project.project_id}`);
+        if (!response.ok) {
+          throw new Error(`Error fetching messages: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setMessages(data.messages) // array of messages
+      } catch (err) {
+        console.error('Failed to fetch Slack messages:', err);
+      }
     }
     fetchProjectData()
+    
+    // listen to web socket events for new messages
+    socket.on('new_message', (msg) => {
+      console.log('web socket event detected, message: ', msg)  
+      if (msg.project_id === project.project_id) {
+          setMessages(prev => [...prev, msg.message]); // update messages state with new messages
+        }
+    });
+
+    return () => {
+      socket.off('new_message');
+    };
   }, [])
 
   const handleDragEnd = ({ active, over }) => {
@@ -126,21 +188,13 @@ const ProjectDashboard = ( { project } ) => {
     }
   };
 
-  // chat scroll to bottom on load
-  const chatContainerRef = React.useRef(null);
-  useEffect(() => {
-  if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-  }
-  }, []); // or add messages as dependency if dynamic
-
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col md:flex-row gap-6 h-screen font-sans">
+      <div className="flex flex-col md:flex-row gap-6 h-screen max-h-screen">
         {openPopup && <CreateTaskPopup onClose={() => setOpenPopup(false)} teamMembers={teamMembers} project={project} setColumns={setColumns}
           />}
         {/* Left Section */}
-        <div className="flex-1 flex flex-col relative">
+        <div className="flex-1 flex flex-col relative max-h-[90vh]">
           {/* Project Info */}
           <button className="absolute top-4 right-4 text-white bg-green-full p-1 rounded-md hover:bg-green-full/75">
                 <SquarePen size={16} />
@@ -159,13 +213,13 @@ const ProjectDashboard = ( { project } ) => {
           </div>
 
           {/* Tasks Section */}
-          <div className="bg-white p-4 rounded-xl shadow flex-1 flex flex-col">
+          <div className="bg-white p-4 rounded-xl shadow flex-1 flex flex-col max-h-full">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Project Tasks</h3>
               <button className="bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75" onClick={() => setOpenPopup(true)}>Create Task +</button>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-2 flex-1">
+            <div className="grid md:grid-cols-3 gap-2 flex-1 max-h-full">
               {['todo', 'inprogress', 'done'].map((columnId) => {
                 const columnTitle = {
                   todo: 'To Do',
@@ -199,7 +253,8 @@ const ProjectDashboard = ( { project } ) => {
         </div>
 
         {/* Right Section: Team + Chat */}
-        <div className="w-full md:w-[300px] flex flex-col max-h-screen gap-6">
+        <div className="w-full md:w-[300px] flex flex-col h-fill gap-6">
+          {/* Team */}
           <div className="bg-white p-4 rounded-xl shadow">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">Team members</h3>
@@ -220,25 +275,8 @@ const ProjectDashboard = ( { project } ) => {
           </div>
 
           {/* Chat */}
-          <div className="bg-white rounded-xl shadow flex flex-col max-h-[75%]">
-            <h3 className="p-4 font-semibold mb-1">Team Chat</h3>
-            <div className= "p-4 flex-1 overflow-y-auto space-y-3 text-sm text-gray-700" ref={chatContainerRef}>
-              <div><strong>Devon</strong> <span className="text-gray-400">11:03 AM</span><br/> Hi! I’m Devon from UWC Maastricht. Nice to meet you all!</div>
-              <div><strong>Jamie Ross</strong> <span className="text-gray-400">11:03 AM</span><br/> Hi everyone, I’m Jamie from UWC Maastricht.</div>
-              <div><strong>Jessica Summers</strong> <span className="text-gray-400">11:03 AM</span><br/> Hey team, Jess here from St Clare’s.</div>
-              <div><strong>Sally McArthur</strong> <span className="text-gray-400">11:05 AM</span><br/> Hey! I’m Sally, also from St. Clare’s. Looking forward to collaborating!</div>
-              <div><strong>Jeremy Sallee</strong> <span className="text-gray-400">11:05 AM</span><br/> Hi! I’m Jeremy from FIS. Nice to meet you all!</div>
-              <div><strong>Me</strong> <span className="text-gray-400">11:06 AM</span><br/> Hi! I’m Brandon from FIS too. Thanks for picking me as team leader!</div>
-              <div><strong>Me</strong> <span className="text-gray-400">11:06 AM</span><br/> We have been tasked to build a comprehensive donor breakdown, and build a newsletter that is sent to each donor weekly.</div>
-            </div>
-            <div className='mt-2 border-t-2 border-green-med-dark/10 flex px-4 py-3 gap-2'>
-                <input
-                className="border-none text-sm focus:outline-none flex-1"
-                placeholder="Reply..."
-                />
-                <button onClick={() => console.log("Sending message...")}><SendHorizontal className='opacity-50 hover:opacity-75 transition' size={16}/></button>
-            </div>
-          </div>
+          <ProjectChat project={project} user={user} onMessage={handleMessage} messages={messages}/>
+          
         </div>
       </div>
     </DndContext>
