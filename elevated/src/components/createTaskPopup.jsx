@@ -71,7 +71,7 @@ const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns }) => {
   
     return (
       <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-        <div className="bg-white p-6 rounded-xl w-full max-w-xl max-h-[80vh] overflow-auto shadow-lg">
+        <div className="bg-white relative p-6 rounded-xl w-full max-w-xl max-h-[90vh] overflow-auto shadow-lg">
           <h2 className="text-lg font-semibold mb-4">Create New Task</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -166,7 +166,7 @@ const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns }) => {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                className="px-4 py-1 text-sm border-none rounded-md hover:bg-gray-100"
+                className="absolute top-2 right-2 px-4 py-1 text-sm border-none rounded-md hover:bg-gray-100"
                 onClick={onClose}
               >
                 Cancel

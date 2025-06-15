@@ -29,9 +29,10 @@ const ProjectChat = ( { project, user, onMessage, messages }) => {
     }
 
   return (
-    <div className="flex flex-col max-h-[75vh] h-full w-full bg-background text-foreground antialiased border rounded-2xl border-green-med-dark/30 ">
+    <div className="flex flex-col max-h-[75vh] h-full w-full bg-white p-4 rounded-xl shadow">
      {/* Messages */}
-     <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+     <h3 className="font-semibold">Team chat</h3>
+     <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4">
        {messages.length === 0 ? (
          <div className="text-center text-sm text-muted-foreground">
            No messages yet. Start the conversation!

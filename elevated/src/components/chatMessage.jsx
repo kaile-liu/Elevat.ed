@@ -47,12 +47,12 @@ const ChatMessage = ( { message, senderProfileId, messageText, isOwnMessage, sho
   return (
     <div className={`flex justify-start ${showHeader ? 'mt-4' : ''}`}>
       <img className={`w-8 h-8 rounded-full ${!showHeader ? 'opacity-0' : ''}`} src={senderPfp}></img>
-      <div className={`max-w-[75%] w-fit flex flex-col`}>
+      <div className={`max-w-[20ch] w-fit flex flex-col`}>
         {showHeader && (
-          <div className={`flex items-center gap-2 text-xs px-3`}
+          <div className={`flex flex-col items-start text-xs px-3 mb-1`}
           >
-            <span className={'font-medium'}>{senderName}</span>
-            <span className="text-foreground/50 text-xs">{formatTimestamp(message.ts)}</span> 
+            <span className={'font-medium'}>{senderName ? senderName : 'User name'}</span>
+            <span className="text-gray-600 text-xs">{formatTimestamp(message.ts)}</span> 
           </div>
         )}
         <div

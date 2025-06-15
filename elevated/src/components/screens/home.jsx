@@ -51,7 +51,7 @@ const Home = () => {
     }
 
   return (
-    <div className='flex gap-4 min-h-screen'>
+    <div className='flex gap-4 min-h-screen p-6'>
         <div className="flex flex-col text-green-dark">
             <p className='text-sm font-medium text-green-med-dark'>Hi User</p>
             <h1 className="text-4xl font-bold mb-12">Welcome back,</h1>

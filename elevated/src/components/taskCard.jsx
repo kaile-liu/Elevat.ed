@@ -24,7 +24,7 @@ const DraggableCard = ({ id, children }) => {
       style={style}
       {...listeners}
       {...attributes}
-      className="relative bg-white p-3 rounded-xl border-2 border-green-light mb-3 shadow-sm hover:cursor-grab"
+      className="relative min-w-60 max-w-60 h-30 bg-white p-3 rounded-xl border-2 border-green-light mb-3 shadow-sm hover:cursor-grab"
     >
       {children}
     </div>
@@ -64,7 +64,7 @@ const TaskCard = ({ task }) => {
                 {task.priority}
             </div>
             <p className="font-semibold text-sm">{task.task_title}</p>
-            <p className="text-xs text-gray-500 line-clamp-5">{task.task_description}</p>
+            <p className="text-xs text-gray-500 line-clamp-3">{task.task_description}</p>
             <div className='absolute top-2 right-1 flex gap-0.5'>
                 {profiles.map((profile) => (
                 <div key={profile.profile_id} className='relative group'>

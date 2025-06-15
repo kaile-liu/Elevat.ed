@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  font-family: roboto, sans-serif;
+  font-family: Poppins, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -10,11 +10,32 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  border: none;
+}
+
 @theme {
   --color-blue-light:rgb(240, 247, 255);
   --color-blue-med:rgb(108, 176, 253);
   --color-blue-full: #0077FF;
-  --color-green-light:rgb(250, 252, 245);
+  --color-green-light:rgb(248, 250, 243);
   --color-green-full:rgb(159, 202, 69);
   --color-green-med: #BAF146;
   --color-green-med-dark:rgb(109, 121, 86);
@@ -36,4 +57,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+p {
+  @apply text-green-dark/85;
 }

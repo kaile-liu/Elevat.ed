@@ -1,7 +1,7 @@
 import React from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { SquarePen } from 'lucide-react';
+import { SquarePen, Upload, FileText, ImageIcon, ExternalLink, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as fetchData from "../utils/fetchData"
 import CreateTaskPopup from './createTaskPopup';
@@ -38,16 +38,48 @@ const DroppableColumn = ({ id, title, count, color, children }) => {
   const { setNodeRef } = useDroppable({ id });
 
   return (
-    <div ref={setNodeRef} className="bg-green-light rounded-lg p-3 min-h-[200px]">
+    <div ref={setNodeRef} className="bg-green-light rounded-lg p-3 min-h-[160px]">
       <h4 className={`font-semibold text-sm mb-2 text-${color}-600`}>
         • {title} <span className="text-gray-500">({count})</span>
       </h4>
-      {children}
+      <div className='flex gap-4 overflow-auto'>
+        {children}
+      </div>
     </div>
   );
 };
 
 const ProjectDashboard = ( { project } ) => {
+  const [files, setFiles] = useState([]);
+  const handleFileChange = (e) => {
+    const newFiles = Array.from(e.target.files);
+    setFiles((prev) => [...prev, ...newFiles]);
+  };
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const [links, setLinks] = useState([]);
+  const [linkInput, setLinkInput] = useState("");
+  const addLink = () => {
+    if (linkInput && isValidUrl(linkInput)) {
+      setLinks((prev) => [...prev, linkInput]);
+      setLinkInput("");
+    }
+  };
+  const removeLink = (index) => {
+    setLinks((prev) => prev.filter((_, i) => i !== index));
+  };
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+
   // store project states below
   const [user, setUser] = useState({})
   const [teamMembers, setTeamMembers] = useState([])
@@ -196,9 +228,6 @@ const ProjectDashboard = ( { project } ) => {
         {/* Left Section */}
         <div className="flex-1 flex flex-col relative max-h-[90vh]">
           {/* Project Info */}
-          <button className="absolute top-4 right-4 text-white bg-green-full p-1 rounded-md hover:bg-green-full/75">
-                <SquarePen size={16} />
-          </button>
           <div className="bg-white p-4 rounded-xl shadow mb-6">
             <h2 className="text-xl font-semibold">
               {project.project_name}
@@ -219,7 +248,7 @@ const ProjectDashboard = ( { project } ) => {
               <button className="bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75" onClick={() => setOpenPopup(true)}>Create Task +</button>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-2 flex-1 max-h-full">
+            <div className="grid md:grid-cols-1 md:grid-rows-3 gap-4 flex-1 max-h-full">
               {['todo', 'inprogress', 'done'].map((columnId) => {
                 const columnTitle = {
                   todo: 'To Do',
@@ -252,26 +281,132 @@ const ProjectDashboard = ( { project } ) => {
           </div>
         </div>
 
-        {/* Right Section: Team + Chat */}
+        {/* Right Section: Deliverables + Chat */}
         <div className="w-full md:w-[300px] flex flex-col h-fill gap-6">
-          {/* Team */}
+          {/* Deliverables */}
           <div className="bg-white p-4 rounded-xl shadow">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="font-semibold">Team members</h3>
-              <button className="text-sm text-lime-600 font-semibold hover:underline">+ Invite</button>
+            <h3 className="font-semibold">Upload deliverables</h3>
+            {/* File upload */}
+            <label className="block mb-2 text-sm font-medium text-gray-700 cursor-pointer">
+              <span className="flex items-center gap-2">
+                Upload files (PDFs or Images)
+                <Upload width={16} className="hover:opacity-75" />
+              </span>
+              <input
+                type="file"
+                accept=".pdf,image/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+
+            {/* File Preview List */}
+            {files.length > 0 ? (
+              <ul className="mt-2 space-y-2">
+                {files.map((file, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* File Type Icon */}
+                      {file.type.startsWith("image/") ? (
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                      ) : (
+                        <FileText className="w-6 h-6 text-gray-500" />
+                      )}
+
+                      {/* File name */}
+                      <span className="text-sm text-gray-800">{file.name}</span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {/* View button for PDFs */}
+                      {file.type === "application/pdf" && (
+                        <a
+                          href={URL.createObjectURL(file)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 text-sm hover:underline"
+                        >
+                          View
+                        </a>
+                      )}
+
+                      {/* Remove file */}
+                      <button
+                        onClick={() => removeFile(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className='text-sm text-gray-500'>No files to preview</p>}
+
+            {/* Link submission */}
+            <div className="mt-4">
+              <label className="block mb-1 text-sm font-medium text-gray-700">
+                Submit a link (e.g., Google Docs, Slides)
+              </label>
+              <input
+                type="url"
+                placeholder="https://docs.google.com/..."
+                value={linkInput}
+                onChange={(e) => setLinkInput(e.target.value)}
+                className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <button
+                onClick={addLink}
+                className="px-4 py-2 bg-none text-gray-600 rounded-lg hover:text-gray-400 transition text-sm"
+              >
+                Add
+              </button>
             </div>
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4].map((i) => (
-                <img
-                  key={i}
-                  src={`https://randomuser.me/api/portraits/thumb/men/${i}.jpg`}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full border-2 border-white -ml-2 first:ml-0"
-                />
-              ))}
-              <div className="text-sm bg-lime-100 text-lime-700 rounded-full px-2 py-0.5 ml-2">+1</div>
-              <span className="text-sm text-gray-600 ml-1">See all</span>
-            </div>
+
+            {/* Preview links */}
+            <ul className="mt-3 space-y-2">
+              {links.length > 0 ? links.map((link, index) => (
+                <li
+                  key={index}
+                  className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
+                >
+                  <span className="text-sm text-blue-700 truncate max-w-xs">{link}</span>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      <ExternalLink size={16} />
+                    </a>
+                    <button
+                      onClick={() => removeLink(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </li>
+              )) : <p className='text-sm text-gray-500'>No links to preview</p>}
+            </ul>
+
+            {/* Submit button */}
+            <button
+              type="button"
+              className="mt-4 bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75"
+            >
+              Submit Deliverables
+            </button>
           </div>
 
           {/* Chat */}

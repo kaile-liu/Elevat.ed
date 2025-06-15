@@ -1,18 +1,21 @@
 import React from 'react'
 import Alert from "@mui/material/Alert"; 
 import { supabase } from "../integrations/supabase/client"; // Supabase client
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/sidebar';
 import ProfileSidebar from '../components/profileSidebar';
 import Home from '../components/screens/home';
 import Cas from '../components/screens/cas'
 import Opportunities from '../components/screens/opportunities';
 import Project from '../components/screens/project';
+import HeaderBar from '../components/headerbar';
+import Chat from '../components/screens/Chat';
 
 const Dashboard = () => {
   const [selected, setSelected] = useState('home');
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isProfileBarOpen, setIsProfileBarOpen] = useState(false)
 
   // fetch data
   useEffect(() => {
@@ -62,23 +65,28 @@ const Dashboard = () => {
       case 'trackr':
         return <Opportunities />;
       case 'mentors':
-        return <div>mentors View</div>;
+        return <Chat />;
       case 'leaderboard':
         return <div>leaderboard View</div>;
     }
   }
 
   return (
-    <div className="grid grid-cols-10 w-screen h-screen relative">
-
-      <Sidebar selected={selected} setSelected={setSelected}/>
-      
-      <div className='col-span-7 flex justify-start items-start w-full h-full p-10'>
-        {renderView()}
+    <div className='flex flex-col w-screen h-screen overflow-x-hidden'>
+      <div className='h-12 w-full'>
+        <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen}/>
       </div>
-
-      <ProfileSidebar />
-        
+      
+      <div className="grow flex w-full h-full relative">
+        <Sidebar selected={selected} setSelected={setSelected}/>
+        <div className={`bg-black/15 absolute z-1 w-full h-full ${isProfileBarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-all`}></div>
+        <div className='relative w-full h-full bg-green-light/20'>
+          <div className=''>
+            {renderView()}
+          </div>
+          <ProfileSidebar isOpen={isProfileBarOpen} setIsProfileBarOpen={setIsProfileBarOpen}/>
+        </div>
+      </div>
     </div>
   ) 
 

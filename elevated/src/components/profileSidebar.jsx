@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { supabase } from "../integrations/supabase/client"
 import * as fetchData from "../utils/fetchData"
+import gsap from 'gsap'
 
-const ProfileSidebar = () => {
+const ProfileSidebar = ( { isOpen, setIsProfileBarOpen } ) => {
   const [profilePic, setProfilePic] = useState('/profile.png')
   useEffect(() => {
     const fetchProfilePicture = async () => {
       const userId = await fetchData.getUserId()
       const { data, error } = await supabase
         .from('Users')
-        .select('pfp')
+        .select('pfp') 
         .eq('user_id', userId)
         .single()
       if (error) {
@@ -29,9 +30,22 @@ const ProfileSidebar = () => {
     }
   }
 
+  const profileSidebarRef = useRef(null)
+  // Animate sidebar in/out with GSAP
+  useEffect(() => {
+    const el = profileSidebarRef.current;
+    if (!el) return;
+
+    if (isOpen) {
+      gsap.to(el, { x: '0%', duration: 0.4, ease: 'power2.out' });
+    } else {
+      gsap.to(el, { x: '100%', duration: 0.3, ease: 'power2.in' });
+    }
+  }, [isOpen])  
+
   return (
-    <div className='col-span-2 flex flex-col justify-start items-center gap-4 h-full p-8 pt-10 bg-[#FDFFFB]'>
-      
+    <div ref={profileSidebarRef} className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-4 h-full p-8 pt-10 bg-[#FDFFFB]'>
+      <img src='/chevron-down.png' className='w-4 h-4 cursor-pointer absolute top-4 left-4 rotate-270' onClick={() => setIsProfileBarOpen(open => !open)}></img>
       <div>
         <img src={profilePic} className="w-24 mx-auto rounded-full"></img>
         <div className='flex -mt-4'>
@@ -58,14 +72,14 @@ const ProfileSidebar = () => {
         </div>
       </div>
 
-      <div className='flex w-full justify-evenly py-2 border-2 border-green-med-dark/10 rounded-lg'>
+      <div className='flex w-full justify-evenly py-2 border-2 border-green-med-dark/15 rounded-lg'>
         <img src='/notifications.png' className='w-5'></img>
         <img src='/messages.png' className='w-5'></img>
         <img src='/settings.png' className='w-5'></img>
         <img src='/sign-out.png' className='w-5' onClick={signOut}></img>
       </div>
 
-      <div className='flex flex-col w-full items-center gap-2 p-2 border-2 border-green-med-dark/10 rounded-lg'>
+      <div className='flex flex-col w-full items-center gap-2 p-2 border-2 border-green-med-dark/15 rounded-lg'>
         <p className='font-normal text-green-dark'>Your Team</p>
         <div className='w-full flex justify-between items-center text-sm font-normal text-green-dark/85'>
           <div className='flex items-center gap-2'>
