@@ -4,7 +4,7 @@ import * as fetchData from "../../utils/fetchData";
 import ChatBox from '../chatBox';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000'); // Replace with your server URL
+const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
 const Chat = () => {
   const [selectedTab, setSelectedTab] = useState('Mentor');
@@ -38,7 +38,7 @@ const Chat = () => {
         const mentor = await fetchData.selectSingle("Student_mentors", "*", "student_id", user.profile_id)
         setMentorChannelId(mentor.student_mentor_id)
         mentorChannelIdRef.current = mentor.student_mentor_id; // ✅ update ref
-        console.log(`http://localhost:3000/slack/messages?channelName=mentor-${mentor.student_mentor_id}`)
+        console.log(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${mentor.student_mentor_id}`)
         const mentorProfile = await fetchData.selectSingle("Mentors", "*", "mentor_id", mentor.mentor_id)
         const mentorUserProfile = await fetchData.selectSingle("Users", "*", "profile_id", mentorProfile.profile_id)
         setMentor({
@@ -49,7 +49,7 @@ const Chat = () => {
         })
         // fetch MENTOR MESSAGES
         try {
-          const response = await fetch(`http://localhost:3000/slack/messages?channelName=mentor-${mentor.student_mentor_id}`);
+          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${mentor.student_mentor_id}`);
           if (!response.ok) {
             throw new Error(`Error fetching messages: ${response.statusText}`);
           }
@@ -79,7 +79,7 @@ const Chat = () => {
   // handle message send
   const handleMessage = async (messageText, profile_id) => {
     try {
-      const response = await fetch('http://localhost:3000/slack/send-message', {
+      const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -126,7 +126,7 @@ const Home = ( { user } ) => {
 
         // fetch MESSAGES
         try {
-        const response = await fetch(`http://localhost:3000/slack/messages?channelName=project-group-${projectMember.project_id}`);
+        const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=project-group-${projectMember.project_id}`);
         if (!response.ok) {
             throw new Error(`Error fetching messages: ${response.statusText}`);
         }
@@ -138,7 +138,7 @@ const Home = ( { user } ) => {
 
         const student_mentor = await fetchData.selectSingle('Student_mentors', '*', 'student_id', user.profile_id)
         try {
-        const response = await fetch(`http://localhost:3000/slack/messages?channelName=mentor-${student_mentor.student_mentor_id}`);
+        const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${student_mentor.student_mentor_id}`);
         if (!response.ok) {
             throw new Error(`Error fetching messages: ${response.statusText}`);
         }

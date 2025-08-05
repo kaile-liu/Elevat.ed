@@ -13,7 +13,7 @@ import { io } from 'socket.io-client';
 import Tooltip from '@mui/material/Tooltip';
 import ConfirmationSnackbar from '../components/ui/ConfirmationSnackbar';
 
-const socket = io('http://localhost:3000'); // Replace with your server URL
+const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
 const MentorDashboard = () => {
   const [menuItems, setMenuItems] = useState({})
@@ -82,7 +82,7 @@ const MentorDashboard = () => {
       mentorChannelIdRef.current = studentMentorPair.student_mentor_id; // ✅ update ref
       // fetch MENTOR MESSAGES
       try {
-        const response = await fetch(`http://localhost:3000/slack/messages?channelName=mentor-${studentMentorPair.student_mentor_id}`);
+        const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${studentMentorPair.student_mentor_id}`);
         if (!response.ok) {
           throw new Error(`Error fetching messages: ${response.statusText}`);
         }
@@ -118,7 +118,7 @@ const MentorDashboard = () => {
   // handle message send
   const handleMessage = async (messageText, profile_id) => {
     try {
-      const response = await fetch('http://localhost:3000/slack/send-message', {
+      const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', { // old: http://localhost:3000
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

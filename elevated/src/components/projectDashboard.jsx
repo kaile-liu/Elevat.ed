@@ -14,7 +14,7 @@ import TaskDetailsPopup from './taskDetailsPopup';
 import ConfirmationSnackbar from './ui/ConfirmationSnackbar';
 import Tooltip from '@mui/material/Tooltip';
 
-const socket = io('http://localhost:3000'); // Replace with your server URL
+const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
 const DraggableCard = ({ id, children }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -81,7 +81,7 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
   // send message to Slack Channel via the '/slack/send-message' endpoint
   const handleMessage = async (messageText, attachments, profile_id) => {
     try {
-      const response = await fetch('http://localhost:3000/slack/send-message', {
+      const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -139,7 +139,7 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
 
       // fetch MESSAGES
       try {
-        const response = await fetch(`http://localhost:3000/slack/messages?channelName=project-group-${project.project_id}`);
+        const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=project-group-${project.project_id}`);
         if (!response.ok) {
           throw new Error(`Error fetching messages: ${response.statusText}`);
         }
