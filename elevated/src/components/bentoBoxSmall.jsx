@@ -7,8 +7,8 @@ const BentoBoxSmall = ({upperText, lowerTextStat, lowerTextSub, leftIcon, rightI
       {leftIcon && <img className='w-12' src={leftIcon} alt={upperText}></img>}
 
       <div className='flex flex-col items-start justify-center gap-1'>
-        <p className={`text-sm font-normal ${hasGradient ? 'text-white' : 'text-green-med-dark'}`}>{upperText}</p>
-        <p className="text-2xl font-bold">{lowerTextStat} <span className={`text-sm font-medium ${hasGradient ? 'text-white' : 'text-green-med-dark'}`}>{lowerTextSub}</span></p>
+        <p className={`text-sm font-normal ${hasGradient ? '!text-white' : 'text-green-med-dark'}`}>{upperText}</p>
+        <p className={`text-2xl font-semibold ${hasGradient ? '!text-white' : 'text-green-med-dark'}`}>{lowerTextStat} <span className={`text-sm font-medium ${hasGradient ? '!text-white' : 'text-green-med-dark'}`}>{lowerTextSub}</span></p>
       </div>
       
       {rightIcon && <img className='w-12' src={rightIcon} alt={upperText}></img>}

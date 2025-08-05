@@ -1,11 +1,30 @@
 import { supabase } from "../integrations/supabase/client"; // Supabase client
 
-export const select = async (table, field, eq, eqVal) => {
-    const { data, error } = await supabase
-        .from(table)
-        .select(field)
-        .eq(eq, eqVal);
+export const select = async (table, field, eq, eqVal, orderBy = null, ascending = true) => {
+    let query = supabase
+    .from(table)
+    .select(field)
+    .eq(eq, eqVal);
 
+    if (orderBy) {
+        query = query.order(orderBy, { ascending });
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+}
+
+export const selectNoQuery = async (table, field, orderBy = null, ascending = true) => {
+    let query = supabase
+    .from(table)
+    .select(field)
+
+    if (orderBy) {
+        query = query.order(orderBy, { ascending });
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
 }
@@ -37,6 +56,14 @@ export const update = async (table, data, eq, eqVal) => {
         .update(data)
         .eq(eq, eqVal);
     if (error) throw error;
+};
+
+export const insert = async (table, data) => {
+  const { error } = await supabase
+    .from(table)
+    .insert(data);
+
+  if (error) throw error;
 };
 
 // Auth.User

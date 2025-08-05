@@ -2,12 +2,25 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/StudentDashboard";
 import MentorDashboard from "./pages/MentorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CasAdvisorDashboard from "./pages/CasAdvisorDashboard";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import { TourProvider, useTour } from '@reactour/tour'
+
+// Define tour steps here
+const steps = [
+  {
+    selector: '#home-page-btn',
+    content: 'Welcome to your dashboard!',
+  },
+  {
+    selector: '#profile',
+    content: 'Click here to view your profile.',
+  },
+]
 
 const queryClient = new QueryClient();
 
@@ -36,6 +49,15 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
 
+  const { setIsOpen } = useTour()
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsOpen(true)
+      console.log('showing tour')
+    }, 2000) // wait for Dashboard to render
+  }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
       
@@ -48,7 +70,9 @@ function App() {
                 path="/student"
                 element={
                   <ProtectedRoute>
-                    <Dashboard />
+                    <TourProvider steps={steps}>
+                      <Dashboard />
+                    </TourProvider>
                   </ProtectedRoute>
                 }
               />

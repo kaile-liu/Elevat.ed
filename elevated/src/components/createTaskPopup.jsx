@@ -19,7 +19,7 @@ const MenuProps = {
   },
 };
 
-const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns }) => {
+const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns, openSnackbar }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState('Low');
@@ -29,6 +29,7 @@ const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns }) => {
   
     const handleSubmit = async (e) => {
       e.preventDefault();
+      openSnackbar()
       const newTask = { title, description, priority, assignees, dueDate };
       console.log('New Task:', newTask);
       // then insert to DB

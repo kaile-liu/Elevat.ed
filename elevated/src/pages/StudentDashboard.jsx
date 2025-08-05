@@ -9,9 +9,11 @@ import Cas from '../components/screens/cas'
 import Opportunities from '../components/screens/opportunities';
 import Project from '../components/screens/project';
 import HeaderBar from '../components/headerbar';
-import Chat from '../components/screens/Chat';
+import Chat from '../components/screens/Chat.jsx';
+import Leaderboard from '../components/screens/leaderboard.jsx';
+import Settings from '../components/screens/settings.jsx';
 
-const Dashboard = () => {
+const StudentDashboard = () => {
   const [selected, setSelected] = useState('home');
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -26,7 +28,7 @@ const Dashboard = () => {
         // Fetch user data from the Users profiles table
         const { data, error } = await supabase
           .from("Users")
-          .select("profile_id, name, role")
+          .select("*")
           .eq("user_id", userId)
           .single();
         // error handling
@@ -55,41 +57,45 @@ const Dashboard = () => {
   const renderView = () => {
     switch (selected) {
       case 'home':
-        return <Home />;
+        return <Home user={userData}/>;
       case 'learn':
         return <div>learn View</div>;
       case 'project':
         return <Project />;
-      case 'cas':
-        return <Cas />;
+      // case 'cas':
+      //   return <Cas />;
       case 'trackr':
         return <Opportunities />;
       case 'mentors':
         return <Chat />;
       case 'leaderboard':
-        return <div>leaderboard View</div>;
+        return <Leaderboard />;
+      case 'settings':
+        return <Settings user={userData}/>;
     }
   }
 
   return (
     <div className='flex flex-col w-screen h-screen overflow-x-hidden'>
       <div className='h-12 w-full'>
-        <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen}/>
+        <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
       </div>
       
       <div className="grow flex w-full h-full relative">
         <Sidebar selected={selected} setSelected={setSelected}/>
+        
+        {/** darken bg + profile sidebar slide out */}
         <div className={`bg-black/15 absolute z-1 w-full h-full ${isProfileBarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-all`}></div>
+        <ProfileSidebar isOpen={isProfileBarOpen} setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
+
         <div className='relative w-full h-full bg-green-light/20'>
-          <div className=''>
-            {renderView()}
-          </div>
-          <ProfileSidebar isOpen={isProfileBarOpen} setIsProfileBarOpen={setIsProfileBarOpen}/>
+          {renderView()}
         </div>
       </div>
+
     </div>
   ) 
 
 }
 
-export default Dashboard
+export default StudentDashboard

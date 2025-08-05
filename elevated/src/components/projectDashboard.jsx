@@ -1,5 +1,5 @@
 import React from 'react';
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { SquarePen, Upload, FileText, ImageIcon, ExternalLink, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,10 @@ import TaskCard from './taskCard';
 import ProjectChat from './projectChat';
 import { supabase } from '../integrations/supabase/client';
 import { io } from 'socket.io-client';
+import ProfilePopUp from './profilePopUp';
+import TaskDetailsPopup from './taskDetailsPopup';
+import ConfirmationSnackbar from './ui/ConfirmationSnackbar';
+import Tooltip from '@mui/material/Tooltip';
 
 const socket = io('http://localhost:3000'); // Replace with your server URL
 
@@ -38,47 +42,29 @@ const DroppableColumn = ({ id, title, count, color, children }) => {
   const { setNodeRef } = useDroppable({ id });
 
   return (
-    <div ref={setNodeRef} className="bg-green-light rounded-lg p-3 min-h-[160px]">
-      <h4 className={`font-semibold text-sm mb-2 text-${color}-600`}>
+    <div ref={setNodeRef} className="bg-green-light rounded-lg p-3 min-h-[160px] max-h-[360px] overflow-y-auto overflow-x-hidden">
+      <h4 className={`font-semibold text-sm mb-2 ${color}`}>
         • {title} <span className="text-gray-500">({count})</span>
       </h4>
-      <div className='flex gap-4 overflow-auto'>
+      <div className='flex flex-col gap-2 max-h-full'>
         {children}
       </div>
     </div>
   );
 };
 
-const ProjectDashboard = ( { project } ) => {
-  const [files, setFiles] = useState([]);
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files);
-    setFiles((prev) => [...prev, ...newFiles]);
-  };
-  const removeFile = (index) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
+  const [activeTab, setActiveTab] = useState('Client Overview');
+  const [isOpen, setIsOpen] = useState(false);
+  const [isProfileTabOpen, setIsProfileTabOpen] = useState(false);
+  const [selectedProfileTab, setSelectedProfileTab] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [activeCard, setActiveCard] = useState(null);
 
-  const [links, setLinks] = useState([]);
-  const [linkInput, setLinkInput] = useState("");
-  const addLink = () => {
-    if (linkInput && isValidUrl(linkInput)) {
-      setLinks((prev) => [...prev, linkInput]);
-      setLinkInput("");
-    }
-  };
-  const removeLink = (index) => {
-    setLinks((prev) => prev.filter((_, i) => i !== index));
-  };
-  const isValidUrl = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
+  // snackbar states
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   // store project states below
   const [user, setUser] = useState({})
@@ -92,8 +78,8 @@ const ProjectDashboard = ( { project } ) => {
     done: [],
   });
 
-  // send messgae to Slack Channel via the '/slack/send-message' endpoint
-  const handleMessage = async (messageText, profile_id) => {
+  // send message to Slack Channel via the '/slack/send-message' endpoint
+  const handleMessage = async (messageText, attachments, profile_id) => {
     try {
       const response = await fetch('http://localhost:3000/slack/send-message', {
         method: 'POST',
@@ -101,8 +87,8 @@ const ProjectDashboard = ( { project } ) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          project_id: project.project_id,
-          text: messageText,
+          channel: `project-group-${project.project_id}`,
+          text: `${messageText}::attachments::[${attachments.join(', ')}]`,
           profile_id: profile_id
         }),
       });
@@ -132,12 +118,10 @@ const ProjectDashboard = ( { project } ) => {
         member: member,
         profile: await fetchData.selectSingle("Users", "*", "profile_id", member.profile_id),
       })))
-      console.log(memberProfiles)
       setTeamMembers(memberProfiles)
 
       // fetch TASKS
       const projectTasksData = await fetchData.select("Project_tasks", "*", "project_id", project.project_id)
-      console.log(projectTasksData)
       // Create a copy of the empty columns on component mount
       const updatedColumns = {
         todo: [],
@@ -155,7 +139,7 @@ const ProjectDashboard = ( { project } ) => {
 
       // fetch MESSAGES
       try {
-        const response = await fetch(`http://localhost:3000/slack/messages?project_id=${project.project_id}`);
+        const response = await fetch(`http://localhost:3000/slack/messages?channelName=project-group-${project.project_id}`);
         if (!response.ok) {
           throw new Error(`Error fetching messages: ${response.statusText}`);
         }
@@ -165,12 +149,12 @@ const ProjectDashboard = ( { project } ) => {
         console.error('Failed to fetch Slack messages:', err);
       }
     }
-    fetchProjectData()
+    fetchProjectData() 
     
     // listen to web socket events for new messages
     socket.on('new_message', (msg) => {
-      console.log('web socket event detected, message: ', msg)  
-      if (msg.project_id === project.project_id) {
+      const id = msg.channel.split('-').pop(); 
+      if (id == project.project_id) {
           setMessages(prev => [...prev, msg.message]); // update messages state with new messages
         }
     });
@@ -181,6 +165,7 @@ const ProjectDashboard = ( { project } ) => {
   }, [])
 
   const handleDragEnd = ({ active, over }) => {
+    setActiveCard(null)
     if (!over) return;
 
     const sourceCol = Object.keys(columns).find((colId) =>
@@ -188,6 +173,10 @@ const ProjectDashboard = ( { project } ) => {
     );
 
     const destinationCol = over.id;
+
+    setIsError(false)
+    setSnackbarMessage(`Moved task to ${destinationCol}`);
+    setSnackbarOpen(true);
 
     if (sourceCol && destinationCol && sourceCol !== destinationCol) {
       setColumns((prev) => {
@@ -206,7 +195,6 @@ const ProjectDashboard = ( { project } ) => {
       });
 
       const updateStatus = async () => {
-        console.log('status destination: ', destinationCol, 'for task: ', active.id)
         const taskToUpdate = columns[sourceCol].find(task => task.task_id === active.id);
         if (!taskToUpdate) return;
         try {
@@ -220,35 +208,144 @@ const ProjectDashboard = ( { project } ) => {
     }
   };
 
+  const handleDragStart = (e) => {
+    const activeId = e.active.id;
+    console.log(activeId)
+    // loop through columns to find the card
+    for (const column in columns) {
+      const task = columns[column].find(card => card.task_id === activeId);
+      if (task) {
+        //
+        setActiveCard(task);
+        console.log(task)
+        break;
+      }
+    }
+  }
+
   return (
-    <DndContext onDragEnd={handleDragEnd}>
-      <div className="flex flex-col md:flex-row gap-6 h-screen max-h-screen">
-        {openPopup && <CreateTaskPopup onClose={() => setOpenPopup(false)} teamMembers={teamMembers} project={project} setColumns={setColumns}
-          />}
+    <DndContext onDragEnd={handleDragEnd} onDragStart={handleDragStart}>
+      <div className="flex flex-col md:flex-row gap-6 h-[90vh]">
+        {openPopup && <CreateTaskPopup onClose={() => setOpenPopup(false)} teamMembers={teamMembers} project={project} setColumns={setColumns} openSnackbar={() => {
+          setIsError(false)
+          setSnackbarMessage(`You successfully created a new task.`);
+          setSnackbarOpen(true);
+        }}/>}
+        {selectedTask && (
+          <TaskDetailsPopup 
+            task={selectedTask} 
+            onClose={() => setSelectedTask(null)} 
+          />
+        )}
         {/* Left Section */}
         <div className="flex-1 flex flex-col relative max-h-[90vh]">
+          {isLocked && <div className='absolute inset-0 backdrop-blur-sm bg-white/60 z-50 flex flex-col justify-center items-center'>
+            <h2>Locked 🔒</h2>
+            <p className='text-sm max-w-[60ch] text-center'>You will be assigned your project brief once everyone has completed the 4-week training - then the fun begins!</p>
+          </div>}
           {/* Project Info */}
-          <div className="bg-white p-4 rounded-xl shadow mb-6">
-            <h2 className="text-xl font-semibold">
-              {project.project_name}
-            </h2>
-            <p className="text-sm mt-1"><strong>NGO:</strong> {project.project_ngo}</p>
-            <p className="mt-2 text-sm text-gray-700">
-              <strong>Description:</strong> {project.project_description}
-            </p>
-            <p className="mt-2 text-sm">
-              <strong>Upcoming deadline:</strong> Mid-term presentation <span className="text-green-full font-semibold">due 25/05/25</span>
-            </p>
+          <div className="p-4 rounded-xl shadow mb-6 h-48">
+            <div className="flex gap-4 mb-2">
+              {['Client Overview', 'Project brief'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`text-sm font-semibold pb-1 border-b-2 ${
+                    activeTab === tab
+                      ? 'text-green-full border-green-full'
+                      : 'text-green-med-dark border-transparent'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            {activeTab === 'Client Overview' && (
+              <div className="space-y-4 p-2">
+                <div className="flex items-center gap-3">
+                  {/* Replace with real logo if available */}
+                  <img src={project.ngo_logo} width={40}/>
+                  <h2 className="text-xl font-semibold">{project.project_ngo}</h2>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 line-clamp-2">
+                    {project.ngo_description}
+                  </p>
+                  <p className='mt-1 cursor-pointer w-full text-right text-sm' onClick={() => setIsOpen(true)}>Read full</p>
+                </div>
+              </div>
+            )}
+            {activeTab === 'Project brief' && (
+              <div className="space-y-4 p-2">
+                <div className="flex items-center gap-3">
+                  {/* Replace with real logo if available */}
+                  <img src='/target.png' width={40}/>
+                  <h2 className="text-xl font-semibold">Project Brief</h2>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-700 line-clamp-3">
+                    {project.project_brief}
+                  </p>
+                  <p className='mt-1 cursor-pointer w-full text-right text-sm' onClick={() => setIsOpen(true)}>Read full</p>
+                </div>
+              </div>
+            )}
+
+            {/* Popup Overlay */}
+            {isOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/15">
+                {/* Popup Box */}
+                <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4 relative">
+                  <button onClick={() => setIsOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl">&times;</button>
+                  {activeTab === 'Client Overview' && (
+                    <div className="space-y-4 p-2">
+                      <div className="flex items-center gap-3">
+                        {/* Replace with real logo if available */}
+                        <img src={project.ngo_logo} width={40}/>
+                        <h2 className="text-xl font-semibold">{project.project_ngo}</h2>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        {project.ngo_description}
+                      </p>
+                    </div>
+                  )}
+                  {activeTab === 'Project brief' && (
+                    <div className="space-y-4 p-2">
+                      <div className="flex items-center gap-3">
+                        {/* Replace with real logo if available */}
+                        <img src='/target.png' width={40}/>
+                        <h2 className="text-xl font-semibold">Project Brief</h2>
+                      </div>
+                      <p className="text-sm text-gray-700">
+                        {project.project_brief}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tasks Section */}
           <div className="bg-white p-4 rounded-xl shadow flex-1 flex flex-col max-h-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Project Tasks</h3>
+              <div className='flex items-center gap-2'>
+                <h3 className="text-lg font-semibold">Project Tasks</h3>
+                <Tooltip title='Drag handles in the top-right corner of tasks to move them between columns.' className=''
+                  slotProps={{
+                    tooltip: {
+                      sx: { maxWidth: 160, width: 160 }, 
+                    },
+                  }}>
+                  <div className='bg-green-full/80 rounded-full p-1 hover:bg-green-full'><img src='/question-mark.png' className='w-3 h-3 invert'/></div>
+                </Tooltip>
+              </div>
               <button className="bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75" onClick={() => setOpenPopup(true)}>Create Task +</button>
             </div>
 
-            <div className="grid md:grid-cols-1 md:grid-rows-3 gap-4 flex-1 max-h-full">
+            <div className="grid md:grid-cols-3 md:grid-rows-1 gap-4 flex-1 max-h-full">
               {['todo', 'inprogress', 'done'].map((columnId) => {
                 const columnTitle = {
                   todo: 'To Do',
@@ -257,9 +354,9 @@ const ProjectDashboard = ( { project } ) => {
                 }[columnId];
 
                 const columnColor = {
-                  todo: 'blue',
-                  inprogress: 'yellow',
-                  done: 'green',
+                  todo: 'text-blue-600', 
+                  inprogress: 'text-yellow-600',
+                  done: 'text-green-600',
                 }[columnId];
 
                 return (
@@ -268,11 +365,19 @@ const ProjectDashboard = ( { project } ) => {
                     id={columnId}
                     title={columnTitle}
                     count={columns[columnId].length}
-                    color={columnColor}
-                    className='overflow-y-auto'
+                    color={columnColor} 
+                    className=''
                   >
                     {columns[columnId].map((task) => (
-                      <TaskCard task={task}/>
+                        activeCard == task ? 
+                        <DragOverlay>
+                          <div onClick={() => setSelectedTask(task)} key={task.task_id}>
+                            <TaskCard task={task} isDragging={true} draggable={!viewOnly}/>
+                          </div>
+                        </DragOverlay>
+                      : <div onClick={() => setSelectedTask(task)} key={task.task_id}>
+                            <TaskCard task={task} isDragging={false} draggable={!viewOnly}/>
+                          </div>
                     ))}
                   </DroppableColumn>
                 );
@@ -281,137 +386,40 @@ const ProjectDashboard = ( { project } ) => {
           </div>
         </div>
 
-        {/* Right Section: Deliverables + Chat */}
-        <div className="w-full md:w-[300px] flex flex-col h-fill gap-6">
-          {/* Deliverables */}
+        {/* Right Section: Team overview + Chat */}
+        <div className="w-full md:w-[400px] flex flex-col h-fill gap-6">
+          {/* Team */}
           <div className="bg-white p-4 rounded-xl shadow">
-            <h3 className="font-semibold">Upload deliverables</h3>
-            {/* File upload */}
-            <label className="block mb-2 text-sm font-medium text-gray-700 cursor-pointer">
-              <span className="flex items-center gap-2">
-                Upload files (PDFs or Images)
-                <Upload width={16} className="hover:opacity-75" />
-              </span>
-              <input
-                type="file"
-                accept=".pdf,image/*"
-                multiple
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
-
-            {/* File Preview List */}
-            {files.length > 0 ? (
-              <ul className="mt-2 space-y-2">
-                {files.map((file, index) => (
-                  <li
-                    key={index}
-                    className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* File Type Icon */}
-                      {file.type.startsWith("image/") ? (
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={file.name}
-                          className="w-10 h-10 object-cover rounded"
-                        />
-                      ) : (
-                        <FileText className="w-6 h-6 text-gray-500" />
-                      )}
-
-                      {/* File name */}
-                      <span className="text-sm text-gray-800">{file.name}</span>
+              {/* Left Side: Title + Avatars */}
+              <div className="flex flex-col items-center gap-2">
+                <div>
+                  <h3 className="font-semibold">Team members</h3>
+                </div>
+                {/* Avatars */}
+                <div className="flex space-x-1">
+                  {teamMembers.filter(member => member.profile.profile_id != user.profile_id).map((member, idx) => (
+                    <div key={member.profile.profile_id} className='relative group' onClick={() => {
+                        setSelectedProfileTab(member)
+                        setIsProfileTabOpen(true)
+                      }}>
+                        <p className='absolute whitespace-nowrap -top-8 left-1/2 -translate-x-1/2 bg-white text-xs text-black px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition'>{member.profile.name}</p>
+                        <img src={member.profile.pfp ? member.profile.pfp : './profile.png'} alt={member.profile.name} className={`object-cover w-8 h-8 rounded-full`}/>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      {/* View button for PDFs */}
-                      {file.type === "application/pdf" && (
-                        <a
-                          href={URL.createObjectURL(file)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 text-sm hover:underline"
-                        >
-                          View
-                        </a>
-                      )}
-
-                      {/* Remove file */}
-                      <button
-                        onClick={() => removeFile(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : <p className='text-sm text-gray-500'>No files to preview</p>}
-
-            {/* Link submission */}
-            <div className="mt-4">
-              <label className="block mb-1 text-sm font-medium text-gray-700">
-                Submit a link (e.g., Google Docs, Slides)
-              </label>
-              <input
-                type="url"
-                placeholder="https://docs.google.com/..."
-                value={linkInput}
-                onChange={(e) => setLinkInput(e.target.value)}
-                className="flex-grow px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-              <button
-                onClick={addLink}
-                className="px-4 py-2 bg-none text-gray-600 rounded-lg hover:text-gray-400 transition text-sm"
-              >
-                Add
-              </button>
-            </div>
-
-            {/* Preview links */}
-            <ul className="mt-3 space-y-2">
-              {links.length > 0 ? links.map((link, index) => (
-                <li
-                  key={index}
-                  className="flex items-center justify-between p-2 border rounded-lg bg-gray-50"
-                >
-                  <span className="text-sm text-blue-700 truncate max-w-xs">{link}</span>
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      <ExternalLink size={16} />
-                    </a>
-                    <button
-                      onClick={() => removeLink(index)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </li>
-              )) : <p className='text-sm text-gray-500'>No links to preview</p>}
-            </ul>
-
-            {/* Submit button */}
-            <button
-              type="button"
-              className="mt-4 bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75"
-            >
-              Submit Deliverables
-            </button>
+                  ))}
+                </div>
+              </div>
           </div>
+          {isProfileTabOpen && <ProfilePopUp profile={selectedProfileTab} setIsOpen={setIsProfileTabOpen}/>}
 
           {/* Chat */}
-          <ProjectChat project={project} user={user} onMessage={handleMessage} messages={messages}/>
+          <ProjectChat project={project} user={user} onMessage={handleMessage} messages={messages} members={teamMembers}/>
           
+          <ConfirmationSnackbar
+            open={snackbarOpen}
+            onClose={() => setSnackbarOpen(false)}
+            message={snackbarMessage}
+            error={isError}
+          />
         </div>
       </div>
     </DndContext>

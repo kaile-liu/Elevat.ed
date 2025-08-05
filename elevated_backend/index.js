@@ -31,19 +31,20 @@ io.on('connection', socket => {
 // Route 1: Create a new Slack channel for a specific project
 app.post('/slack/create-channel', async (req, res) => {
     console.log('endpoint 1: /slack/create-channels')
-    const { project_id } = req.body
+    const { channelName } = req.body
+    console.log(channelName)
   
-    if (!project_id) {
-      return res.status(400).json({ error: 'Missing project_id' })
+    if (!channelName) {
+      return res.status(400).json({ error: 'Missing channelName' })
     }
   
-    const channelName = `project-group-${project_id}`
+    //const channelName = `project-group-${project_id}`
     try {
       const createRes = await slackApp.client.conversations.create({
         name: channelName,
         is_private: false,
       })
-      //await slackApp.client.conversations.join({ channel: channelName });
+      await slackApp.client.conversations.join({ channel: channelName });
 
       return res.json({
         message: `Channel ${channelName} created successfully.`,
@@ -59,22 +60,22 @@ app.post('/slack/create-channel', async (req, res) => {
 // Route 2: Send a message to a specific project channel
 app.post('/slack/send-message', async (req, res) => {
     console.log('endpoint 2: /slack/send-message')
-    const { project_id, text, profile_id } = req.body
+    const { channel, text, profile_id } = req.body
    
-    if (!project_id || !text) {
-      return res.status(400).json({ error: 'Missing project_id or text' })
+    if (!channel || !text) {
+      return res.status(400).json({ error: 'Missing channel or text' })
     }
   
     try {
       const result = await slackApp.client.chat.postMessage({
         token: process.env.SLACK_BOT_TOKEN,
-        channel: `project-group-${project_id}`,
-        text: `[${profile_id}] ${text}`,
+        channel: channel,
+        text: `[${profile_id}] ${text}`, 
       })
 
       // EMIT a web socket event
       io.emit('new_message', {
-        project_id,
+        channel,
         message: result.message,
       });
       console.log("Emitted web socket event: 'new_message'")
@@ -89,13 +90,12 @@ app.post('/slack/send-message', async (req, res) => {
 // Route 3: Get all messages from a project's channel
 app.get('/slack/messages', async (req, res) => {
     console.log('endpoint 3: /slack/messages')
-    const { project_id } = req.query // USAGE: GET /slack/messages?project_id=abc123
-    
-    if (!project_id) {
-      return res.status(400).json({ error: 'Missing project_id in query' })
+    const { channelName } = req.query // USAGE: GET /slack/messages?channelName=project-group-123
+    console.log(channelName, 'channel')
+    if (!channelName) {
+      return res.status(400).json({ error: 'Missing channel name in query' })
     }
-
-    const channelName = `project-group-${project_id}`
+    // const channelName = `project-group-${project_id}`
 
     try {
       // Call the conversations.list method using the built-in WebClient

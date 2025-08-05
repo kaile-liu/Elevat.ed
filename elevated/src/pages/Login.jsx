@@ -10,12 +10,10 @@ import { AuthApiError } from "@supabase/supabase-js"; // Import error handling c
 const Login = () => {
   // useNavigate allows us to programmatically redirect the user
   const navigate = useNavigate();
-  // // useLocation gives us the current location (URL path) so we can check before redirecting
-  // const location = useLocation();
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   // errorMessage state to store any authentication error messages for the user
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePassword = () => setShowPassword(!showPassword);
 
   // useEffect runs when the component mounts, and when navigation changes
   useEffect(() => {
@@ -100,13 +98,20 @@ const Login = () => {
 
   
   return (
-    <div className="min-h-screen w-screen bg-[url(/login-bg.png)] bg-center bg-cover flex items-center justify-center bg-background p-4">
-      <div className="bg-white p-12 rounded-3xl w-[80vw] flex flex-col md:flex-row items-center justify-evenly gap-12">
+    <div className="flex min-h-screen">
 
         {/* Left side: text and login form */}
-        <div className="w-full">
-          <div className="text-black/90 text-left space-y-2">
-            <h1 className="text-2xl font-bold">Sign in to Elevat.ed</h1>
+       <div className="w-full md:w-1/2 flex flex-col justify-center px-6 sm:px-12 md:px-24 lg:px-48 items-stretch">
+
+          <div className="max-w-sm w-full">
+            <div className="mb-5">
+              <a className="flex gap-2 items-center justify-center hover:cursor-pointer absolute top-8 left-8"  href='https://www.elevat-ed.co.uk/'>
+                <img className="w-10" src='/elevated_logo.png' alt='logo'></img>
+                <p className="text-2xl font-semibold !text-green-dark/95">Elevat.ed</p>
+              </a> 
+              <h3 className="!text-green-dark/85 text-sm mb-4">Continue your journey</h3>
+              <h1 className="text-2xl font-bold opacity-95">Sign in to Elevat.Ed</h1>
+            </div>
           </div>
 
           {/* Show error alert if there is an error message */}
@@ -114,47 +119,57 @@ const Login = () => {
 
           {/* SupabaseAuth component renders the built-in authentication form */}
           <SupabaseAuth
-            view="sign_in" // Render the sign_in view
-            supabaseClient={supabase} // Provide the Supabase client
+            view="sign_in"
+            supabaseClient={supabase}
             appearance={{
-              theme: ThemeSupa, // Use the default Supabase theme
+              theme: ThemeSupa,
               className: {
-                anchor: "text-white hover:text-white/80", // Style for link/anchor elements
-                button: "text-white", // Style for buttons
-                label: "text-white", // Style for labels
-                input: "text-white bg-background border-white/20", // Style for input fields
+                container: "space-y-4 w-full"
               },
               style: {
-                button: {
-                  background: "#6CB0FD", // Custom background color for button
-                  color: "white", // Button text color
-                  width: "fit-content", // Button width adjusts to content
-                  padding: "12px 40px", // Padding around the button text
-                  borderRadius: "99px", // Fully rounded button corners
-                },
                 container: {
-                  width: "100%",
-                  flex: '1'
+                  padding: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "stretch",
+                  gap: "1rem",
                 },
-                anchor: { marginRight: "auto" }, // Custom styling for anchor elements
+                input: {
+                  padding: "12px 20px",
+                  fontSize: "0.875rem",
+                },
+                label: {
+                  marginBottom: "2px",
+                },
+                button: {
+                  backgroundColor: "#9fca45",
+                  border: "none"
+                }
               },
             }}
-            providers={[]} // No external OAuth providers
+            providers={[]}
             localization={{
               variables: {
                 log_in: {
-                  email_input_placeholder: "Your school email address", // Custom placeholder text
-                  link_text: "", // Empty link text to remove the sign-up link if desired
+                  email_input_label: "E-mail",
+                  email_input_placeholder: "school@email.com",
+                  password_input_label: "Password",
+                  button_label: "Sign In",
                 },
               },
             }}
           />
         </div>
 
-        {/* Right side: Display an image */}
-        <img src="/elevated_earth.png" className="object-cover" alt="Elevated Earth" />
+        {/* Right: Background Image */}
+        <div className="hidden md:block md:w-1/2">
+          <img
+            src="/login-bg.jpg" // replace with actual bg image path
+            alt="Background"
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-      </div>
     </div>
   );
 };

@@ -9,21 +9,53 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
 const test_users = [
+    // {
+    //     email: 'testuser2@example.com',
+    //     password: 'qansc9q*!UIASN'
+    // },
+    // {
+    //     email: 'testuser3@example.com',
+    //     password: 'KOkas9(N)AwsA'
+    // },
+    // {
+    //     email: 'testuser4@example.com',
+    //     password: 'AS%^7dc&Ascasd'
+    // },
+    // {
+    //     email: 'testuser5@example.com',
+    //     password: 'asdjnasd-A&aisbc'
+    // }]
     {
-        email: 'testuser2@example.com',
-        password: 'qansc9q*!UIASN'
+        email: 'testuser6@example.com',
+        password: 'qansc9q*42!UIASN'
     },
     {
-        email: 'testuser3@example.com',
-        password: 'KOkas9(N)AwsA'
+        email: 'testuser7@example.com',
+        password: 'KOka12s9(N)AwsA'
     },
     {
-        email: 'testuser4@example.com',
-        password: 'AS%^7dc&Ascasd'
+        email: 'testuser8@example.com',
+        password: 'AS%^7dc&Ascasasd'
     },
     {
-        email: 'testuser5@example.com',
-        password: 'asdjnasd-A&aisbc'
+        email: 'testuser9@example.com',
+        password: 'asdjna14sd-A&aisbc'
+    },
+    {
+        email: 'testuser10@example.com',
+        password: 'asdjasdnasd-A&aisbc'
+    },
+    {
+        email: 'testuser11@example.com', //mentor
+        password: 'asdjnasd-A&aisb134c'
+    },
+{
+        email: 'testuser12@example.com',
+        password: 'asdjnasd-A&aisabc'
+    },
+{
+        email: 'testuser13@example.com',
+        password: 'asdjnasd-A&aisbasdc'
     }]
 
 test_users.forEach(user => createTestUser(user))
@@ -77,6 +109,7 @@ async function createTestUser( { email, password } ) {
     name: 'Test User',
     email: email,
     role: 'Student',
+    school: 'Frankfurt International School',
     created_at: new Date()
     },
     ]);
@@ -86,31 +119,31 @@ async function createTestUser( { email, password } ) {
         console.log('User profile created successfully:', profileData);
     }
 
-    // get profile_id from new User record
-    const { data: profileIdData, error: profileIdError } = await supabaseAdmin
-          .from("Users")
-          .select("profile_id")
-          .eq("user_id", newUserId)
-          .single();
-        // error handling
-        if (profileIdError) {
-            console.error('Error fetching profile_id from Users table into custom users table:', profileIdError);
-        } else {
-          console.log('User profile_id fetched successfully:', profileIdData);
-        }
+    // // get profile_id from new User record
+    // const { data: profileIdData, error: profileIdError } = await supabaseAdmin
+    //       .from("Users")
+    //       .select("profile_id")
+    //       .eq("user_id", newUserId)
+    //       .single();
+    //     // error handling
+    //     if (profileIdError) {
+    //         console.error('Error fetching profile_id from Users table into custom users table:', profileIdError);
+    //     } else {
+    //       console.log('User profile_id fetched successfully:', profileIdData);
+    //     }
 
-    // Insert a corresponding row into CAS_progress table.
-    const { data: casProgressData, error: casProgressError } = await supabaseAdmin
-    .from('CAS_progress')
-    .insert([   
-    {
-    profile_id: profileIdData.profile_id,
-    },
-    ]);
-    if (casProgressError) {
-        console.error('Error inserting into custom users table:', casProgressError);
-    } else {
-        console.log('User profile created successfully:', casProgressData);
-    }
+    // // Insert a corresponding row into CAS_progress table.
+    // const { data: casProgressData, error: casProgressError } = await supabaseAdmin
+    // .from('CAS_progress')
+    // .insert([   
+    // {
+    // profile_id: profileIdData.profile_id,
+    // },
+    // ]);
+    // if (casProgressError) {
+    //     console.error('Error inserting into custom users table:', casProgressError);
+    // } else {
+    //     console.log('User profile created successfully:', casProgressData);
+    // }
 
 }

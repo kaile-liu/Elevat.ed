@@ -62,3 +62,7 @@ body {
 p {
   @apply text-green-dark/85;
 }
+
+h1, h2, h3 {
+  @apply text-green-dark;
+}
