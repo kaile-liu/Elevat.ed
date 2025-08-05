@@ -9,6 +9,10 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
 const test_users = [
+    {
+        email: 'testmentor@example.com',
+        password: 'testpassword'
+    },
     // {
     //     email: 'testuser2@example.com',
     //     password: 'qansc9q*!UIASN'
@@ -25,58 +29,43 @@ const test_users = [
     //     email: 'testuser5@example.com',
     //     password: 'asdjnasd-A&aisbc'
     // }]
-    {
-        email: 'testuser6@example.com',
-        password: 'qansc9q*42!UIASN'
-    },
-    {
-        email: 'testuser7@example.com',
-        password: 'KOka12s9(N)AwsA'
-    },
-    {
-        email: 'testuser8@example.com',
-        password: 'AS%^7dc&Ascasasd'
-    },
-    {
-        email: 'testuser9@example.com',
-        password: 'asdjna14sd-A&aisbc'
-    },
-    {
-        email: 'testuser10@example.com',
-        password: 'asdjasdnasd-A&aisbc'
-    },
-    {
-        email: 'testuser11@example.com', //mentor
-        password: 'asdjnasd-A&aisb134c'
-    },
-{
-        email: 'testuser12@example.com',
-        password: 'asdjnasd-A&aisabc'
-    },
-{
-        email: 'testuser13@example.com',
-        password: 'asdjnasd-A&aisbasdc'
-    }]
+//     {
+//         email: 'testuser6@example.com',
+//         password: 'qansc9q*42!UIASN'
+//     },
+//     {
+//         email: 'testuser7@example.com',
+//         password: 'KOka12s9(N)AwsA'
+//     },
+//     {
+//         email: 'testuser8@example.com',
+//         password: 'AS%^7dc&Ascasasd'
+//     },
+//     {
+//         email: 'testuser9@example.com',
+//         password: 'asdjna14sd-A&aisbc'
+//     },
+//     {
+//         email: 'testuser10@example.com',
+//         password: 'asdjasdnasd-A&aisbc'
+//     },
+//     {
+//         email: 'testuser11@example.com', //mentor
+//         password: 'asdjnasd-A&aisb134c'
+//     },
+// {
+//         email: 'testuser12@example.com',
+//         password: 'asdjnasd-A&aisabc'
+//     },
+// {
+//         email: 'testuser13@example.com',
+//         password: 'asdjnasd-A&aisbasdc'
+//     }
+]
 
 test_users.forEach(user => createTestUser(user))
 
 async function createTestUser( { email, password } ) {
-    // // Delete existing test user
-    // const { delete_data, delete_error } = await supabaseAdmin.auth.admin.deleteUser('9bb60364-f879-4f69-895c-3b7effe1e2ad');
-    // if (delete_error) {
-    // console.error('Error deleting user:', delete_error);
-    // } else {
-    // console.log('User deleted successfully:', delete_data);
-    // }
-    // const { delete_User_data, delete_User_error } = await supabaseAdmin
-    // .from('Users') // specify the table name
-    // .delete()
-    // .eq('profile_id', '1');
-    // if (delete_User_error) {
-    //     console.error('Error deleting from users table:', delete_User_error);
-    // } else {
-    //     console.log('Profile deleted successfully:', delete_User_data);
-    // }
 
     // Create a new user in Auth.users
     email = email.toLowerCase()
@@ -119,31 +108,17 @@ async function createTestUser( { email, password } ) {
         console.log('User profile created successfully:', profileData);
     }
 
-    // // get profile_id from new User record
-    // const { data: profileIdData, error: profileIdError } = await supabaseAdmin
-    //       .from("Users")
-    //       .select("profile_id")
-    //       .eq("user_id", newUserId)
-    //       .single();
-    //     // error handling
-    //     if (profileIdError) {
-    //         console.error('Error fetching profile_id from Users table into custom users table:', profileIdError);
-    //     } else {
-    //       console.log('User profile_id fetched successfully:', profileIdData);
-    //     }
-
-    // // Insert a corresponding row into CAS_progress table.
-    // const { data: casProgressData, error: casProgressError } = await supabaseAdmin
-    // .from('CAS_progress')
-    // .insert([   
-    // {
-    // profile_id: profileIdData.profile_id,
-    // },
-    // ]);
-    // if (casProgressError) {
-    //     console.error('Error inserting into custom users table:', casProgressError);
-    // } else {
-    //     console.log('User profile created successfully:', casProgressData);
-    // }
+    [11, 12, 13].forEach(async id => {
+        fetch('https://elevat-ed.onrender.com/slack/create-channel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ channelName: `mentor-${id}` }),
+            })
+            .then(response => response.json())
+            .then(data => console.log('Success:', data))
+            .catch(error => console.error('Error:', error));
+    })
 
 }
