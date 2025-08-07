@@ -97,6 +97,16 @@ const Home = ( { user } ) => {
     // FETCH DATA
     useEffect(() => {
     const fetchUserData = async () => {
+        // fetch('https://elevat-ed.onrender.com/slack/create-channel', {
+        // method: 'POST',
+        // headers: {
+        //     'Content-Type': 'application/json'
+        // },
+        // body: JSON.stringify({ channelName: 'frankfurt-international-school' })
+        // })
+        // .then(res => res.json())
+        // .then(data => console.log(data))
+        // .catch(err => console.error('Request error:', err));
         // fetch USERS
         const allUsers = await fetchData.select("Users", "*", "school", user.school, 'points', false)
         const allStudents = allUsers.filter(user => user.role == 'Student');
@@ -192,13 +202,13 @@ const Home = ( { user } ) => {
                     <div className='flex flex-col items-start justify-start w-1/2 h-full'>
                         <p className='text-sm font-semibold !text-green-med-dark/80'>Project Tasks</p>
                         <h1 className='text-xl font-semibold mb-2'>Assigned to You</h1>
-                        <div className="w-full grid grid-cols-2 gap-6">
+                        <div className="w-full h-full grid grid-cols-2 gap-6">
                             {/* To Do Column */}
                             <div className="w-full">
                                 <h2 className="text-md font-semibold mb-2">To Do</h2>
                                 {columns.todo.length === 0 ? (
                                     <div className='w-full h-full flex flex-col items-center justify-center gap-2 text-sm mt-[-20px]'>
-                                        <img className='w-12' src={'/check.png'}/>
+                                        <img className='w-10' src={'/check.png'}/>
                                         <p className="text-sm text-green-med-dark/70">No tasks to show</p>
                                     </div>
                                 ) : (
@@ -215,7 +225,7 @@ const Home = ( { user } ) => {
                                 <h2 className="text-md font-semibold mb-2">In Progress</h2>
                                 {columns.inprogress.length === 0 ? (
                                     <div className='w-full h-full flex flex-col items-center justify-center gap-2 text-sm mt-[-20px]'>
-                                        <img className='w-12' src={'/check.png'}/>
+                                        <img className='w-10' src={'/check.png'}/>
                                         <p className="text-sm text-green-med-dark/70">No tasks to show</p>
                                     </div>
                                 ) : (

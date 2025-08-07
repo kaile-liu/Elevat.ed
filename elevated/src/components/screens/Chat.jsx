@@ -8,7 +8,7 @@ const socket = io('https://elevat-ed.onrender.com'); // Replace with your server
 
 const Chat = () => {
   const [selectedTab, setSelectedTab] = useState('Mentor');
-  const tabs = ['Mentor', 'Everyone', 'Support Team'];
+  const tabs = ['Mentor', 'School', 'Support Team'];
   const [isOpen, setIsOpen] = useState(false);
   const [files, setFiles] = useState([]);
   const handleFileChange = (e) => {
@@ -26,6 +26,7 @@ const Chat = () => {
   const [mentorChannelId, setMentorChannelId] = useState(null)
   const mentorChannelIdRef = useRef(null); // ✅ ref to avoid stale closure
   const [messages, setMessages] = useState([])
+  const [schoolMessages, setSchoolMessages] = useState([])
 
   useEffect(() => {
       const fetchChatData = async () => {
@@ -56,7 +57,18 @@ const Chat = () => {
           const data = await response.json();
           setMessages(data.messages) // array of messages
         } catch (err) {
-          console.error('Failed to fetch Slack messages:', err);
+          console.error('Failed to fetch mentor Slack messages:', err);
+        }
+        // fetch SCHOOL MESSAGES
+        try {
+          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=school-${user.school.toLower().replace(" ", "-")}`);
+          if (!response.ok) {
+            throw new Error(`Error fetching messages: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setSchoolMessages(data.messages) // array of messages
+        } catch (err) {
+          console.error('Failed to fetch school Slack messages:', err);
         }
       }
       fetchChatData()
@@ -86,6 +98,33 @@ const Chat = () => {
         },
         body: JSON.stringify({
           channel: `mentor-${mentorChannelId}`,
+          text: messageText,
+          profile_id: profile_id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error sending message: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Message sent:', data.message);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  }
+
+  // handle message send
+  const handleSchoolMessage = async (messageText, profile_id) => {
+    console.log(typeof user.school.toLower)
+    try {
+      const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channel: `school-${user.school.toLower().replace(" ", "-")}`,
           text: messageText,
           profile_id: profile_id
         }),
@@ -231,7 +270,8 @@ const Chat = () => {
           </div>
           <ChatBox user={user} onMessage={handleMessage} messages={messages}/>
         </div>}
-      {selectedTab == "Everyone" && <ChatBox user={user} onMessage={handleMessage} messages={messages}/>}
+      {selectedTab == "School" && <ChatBox user={user} onMessage={handleSchoolMessage} messages={schoolMessages}/>}
+      {selectedTab == "Support Team" && 'coming soon'}
 
       {/* Popup Overlay */}
         {isMentorOpen && (
@@ -239,7 +279,7 @@ const Chat = () => {
             {/* Popup Box */}
             <div className="bg-white rounded-lg shadow-xl max-w-md flex flex-col justify-start items-center w-full p-6 relative">
               <button onClick={() => setIsMentorOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl">&times;</button>
-              <img className={`w-24 h-24 rounded-full mb-2`} src={mentor.pfp}></img>
+              <img className={`w-24 h-24 rounded-full mb-2`} src={mentor.pfp ? mentor.pfp : '/profile.png'}></img>
               <h3 className={'font-medium'}>{mentor.name}</h3>
               <p className='text-xs mb-4'>{mentor.expertise}</p>
               <span className="text-gray-600 text-xs">{mentor.bio ? mentor.bio : 'Mentor bio'}</span> 

@@ -130,7 +130,7 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
   };
 
   return (
-    <div ref={profileSidebarRef} className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-4 h-full p-8 pt-10 bg-[#FDFFFB]'>
+    <div ref={profileSidebarRef} className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-6 h-full p-8 pt-10 bg-[#FDFFFB]'>
       <img src='/chevron-down.png' className='w-4 h-4 cursor-pointer absolute top-4 left-4 rotate-270' onClick={() => setIsProfileBarOpen(open => !open)}></img>
       <div>
         <img src={user.pfp ? user.pfp : '/profile.png'} className="w-24 h-24 mx-auto rounded-full relative z-1"></img>
@@ -160,7 +160,7 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
           </div>
         </div>
 
-        <div className='flex flex-col w-full items-center gap-2 p-2 border-2 border-green-med-dark/15 rounded-lg'>
+        <div className='flex flex-col w-full items-center gap-4 p-2 border-2 border-green-med-dark/15 rounded-lg'>
           <div className='relative flex items-center'>
             <h3 className='font-normal text-green-dark'>Your Team</h3>
             <Tooltip title="You can endorse one team member each week (resets every Monday)" className='absolute right-[-24px]'

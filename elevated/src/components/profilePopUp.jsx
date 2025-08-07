@@ -4,6 +4,7 @@ import Popup from './ui/popup'
 
 const ProfilePopUp = ( { profile, setIsOpen } ) => {
     const [pos, setPos] = useState('')
+    const [badges, setBadges] = useState([]);
 
     useEffect(() => {
     const fetchProjectData = async () => {
@@ -18,6 +19,13 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
                 break;
             }
         }
+        // fetch badges
+        const fetchedBadges = await Promise.all(
+            user.badges.map(async (badgeId) => {
+            return await fetchData.selectSingle('Badges', '*', 'badge_id', badgeId);
+            })
+        );
+        setBadges(fetchedBadges);
     }
     fetchProjectData()
     }, [])
@@ -28,10 +36,15 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
             <div>
                 <img src={profile.profile.pfp ? profile.profile.pfp : '/profile.png'} className="w-24 h-24 mx-auto object-cover rounded-full"></img>
                 <div className='flex -mt-4'>
+                {
+                    badges.map((badge, i) => <img src={badge.icon} className={`w-10 h-10 ${i > 0 ? '-ml-3' : ''}`}></img>)
+                }
+                </div>
+                {/* <div className='flex -mt-4'>
                     <img src='/research-badge.png' className='w-10 h-10'></img>
                     <img src='/team-mvp-badge.png' className='w-10 h-10 -ml-3'></img>
                     <img src='/presentation-badge.png' className='w-10 h-10 -ml-3'></img>
-                </div>
+                </div> */}
             </div>
 
             <p className='font-medium text-green-dark'>{profile.profile.name}</p>
@@ -61,7 +74,7 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
                 <div className='bg-green-light w-full h-full rounded-xl flex justify-start items-center gap-2 p-4'>
                     <img src='/badge.png' width={32}/>
                     <div>
-                        <p className='font-medium text-md'>3</p>
+                        <p className='font-medium text-md'>{badges.length}</p>
                         <p className='font-light text-xs'>Badges received</p>
                     </div>
                 </div>
