@@ -27,7 +27,7 @@ const ChatBox = ( { user, onMessage, messages } ) => {
 
 
   return (
-    <div className="flex flex-col h-full max-h-[85vh] w-full bg-white p-4 rounded-xl shadow">
+    <div className="flex flex-col h-full w-full bg-white p-4 shadow">
      {/* Messages */}
      <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4">
        {messages.length === 0 ? (
@@ -78,7 +78,7 @@ const ChatBox = ( { user, onMessage, messages } ) => {
         </div>
       </div>
 
-      <form onSubmit={handleSendMessage} className="flex w-full gap-2 border-t border-green-med-dark/30 p-4">
+      <form onSubmit={handleSendMessage} className="flex w-full gap-2 border-t border-green-med-dark/30 p-4 pb-8">
         <input
           className={`bg-background text-sm focus:outline-none transition-all duration-300 w-full`}
           type="text"

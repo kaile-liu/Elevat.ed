@@ -12,6 +12,7 @@ import HeaderBar from '../components/headerbar';
 import Chat from '../components/screens/Chat.jsx';
 import Leaderboard from '../components/screens/leaderboard.jsx';
 import Settings from '../components/screens/settings.jsx';
+import LoadingOverlay from '../components/ui/loadingOverlay.jsx';
 
 const StudentDashboard = () => {
   const [selected, setSelected] = useState('home');
@@ -77,6 +78,8 @@ const StudentDashboard = () => {
 
   return (
     <div className='flex flex-col w-screen h-screen overflow-x-hidden'>
+      <LoadingOverlay />
+
       <div className='h-12 w-full'>
         <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
       </div>

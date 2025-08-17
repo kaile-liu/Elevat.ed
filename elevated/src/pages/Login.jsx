@@ -5,6 +5,7 @@ import { supabase } from "../integrations/supabase/client"; // Supabase client
 import { Navigate, useNavigate, useLocation } from "react-router-dom"; // Import hooks for navigation
 import Alert from "@mui/material/Alert";
 import { AuthApiError } from "@supabase/supabase-js"; // Import error handling classes from Supabase
+import LoadingOverlay from "../components/ui/loadingOverlay";
 
 // Define our Login component
 const Login = () => {
@@ -62,9 +63,9 @@ const Login = () => {
         case "Mentor":
           navigate("/mentor", { replace: true });
           break;
-        case "Cas_advisor":
-          navigate("/cas-advisor", { replace: true });
-          break;
+        // case "Cas_advisor":
+        //   navigate("/cas-advisor", { replace: true });
+        //   break;
         case "Admin":
           navigate("/admin", { replace: true });
           break;
@@ -99,7 +100,8 @@ const Login = () => {
   
   return (
     <div className="flex min-h-screen">
-
+        <LoadingOverlay />
+        
         {/* Left side: text and login form */}
        <div className="w-full md:w-1/2 flex flex-col justify-center px-6 sm:px-12 md:px-24 lg:px-48 items-stretch">
 

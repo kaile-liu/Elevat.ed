@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from "../../integrations/supabase/client"; 
 import OpportunityCard from '../opportunityCard';
 import { Search } from "lucide-react";
+import LoadingOverlay from '../ui/loadingOverlay';
 
 const Opportunities = () => {
     const [opportunities, setOpportunities] = useState([])
@@ -66,7 +67,8 @@ const Opportunities = () => {
 
     
     return (
-    <div className='grid grid-cols-4 gap-4 p-6'>
+    <div className='grid grid-cols-4 gap-4 p-6 relative'>
+        <LoadingOverlay full={false} />
         <div className='col-span-1 h-fit bg-green-light px-4 py-6 rounded-2xl'>
             <p className='text-xl font-medium mb-4'>Filter opportunities</p>
             <form onSubmit={e => handleSearch(e)} className="flex items-center w-full max-w-md bg-white px-4 py-2 rounded-full mb-4">

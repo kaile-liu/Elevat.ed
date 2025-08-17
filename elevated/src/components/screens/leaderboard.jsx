@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import * as fetchData from "../../utils/fetchData"
 import ProfilePopUp from "../profilePopUp";
 import Tooltip from '@mui/material/Tooltip';
+import LoadingOverlay from "../ui/loadingOverlay";
 
 const Leaderboard = () => {
   const [isLoading, setIsLoading] = useState(true)
@@ -45,6 +46,7 @@ const Leaderboard = () => {
     <>
       {isLoading ? <p>loading...</p> : 
         <div className="w-full h-full bg-white flex flex-col items-center justify-center relative">
+          <LoadingOverlay full={false} />
           <Tooltip title={
             <>
             Earn points by receiving endorsements, badges, and completing various other tasks.<br /><br/>

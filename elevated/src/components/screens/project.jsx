@@ -3,6 +3,7 @@ import React from 'react'
 import ProjectDashboard from "../projectDashboard"
 import * as fetchData from "../../utils/fetchData"
 import { supabase } from "../../integrations/supabase/client"; 
+import LoadingOverlay from "../ui/loadingOverlay";
 
 const Project = () => {
     // screen states
@@ -118,7 +119,8 @@ const Project = () => {
     };
 
     return (
-        <div className="w-full min-h-full flex items-center justify-center p-6">
+        <div className="w-full min-h-full flex items-center justify-center p-6 relative">
+            <LoadingOverlay full={false} />
             {project != null ? <div className="w-full h-full self-start">
                 <ProjectDashboard project={project} isLocked={isLocked}/>
             </div> : 

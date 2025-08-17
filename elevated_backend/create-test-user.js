@@ -10,9 +10,13 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
 const test_users = [
     {
-        email: 'testmentor@example.com',
+        email: 'admin@example.com',
         password: 'testpassword'
     },
+    // {
+    //     email: 'testmentor@example.com',
+    //     password: 'testpassword'
+    // },
     // {
     //     email: 'testuser2@example.com',
     //     password: 'qansc9q*!UIASN'
@@ -107,18 +111,5 @@ async function createTestUser( { email, password } ) {
     } else {
         console.log('User profile created successfully:', profileData);
     }
-
-    [11, 12, 13].forEach(async id => {
-        fetch('https://elevat-ed.onrender.com/slack/create-channel', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ channelName: `mentor-${id}` }),
-            })
-            .then(response => response.json())
-            .then(data => console.log('Success:', data))
-            .catch(error => console.error('Error:', error));
-    })
 
 }

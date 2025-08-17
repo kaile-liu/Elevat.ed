@@ -3,6 +3,7 @@ import { Upload, FileText, X, Linkedin } from 'lucide-react';
 import * as fetchData from "../../utils/fetchData";
 import ChatBox from '../chatBox';
 import { io } from 'socket.io-client';
+import LoadingOverlay from '../ui/loadingOverlay';
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
@@ -142,17 +143,9 @@ const Chat = () => {
   }
 
   return (
-    <div className='flex flex-col w-full h-full'>
+    <div className='flex flex-col w-full h-full relative'>
 
-      {/* <button onClick={async () => fetch('http://localhost:3000/slack/create-channel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ channelName: 'mentor-3' })
-      }).then(response => response.json()).then(data => console.log(data)).catch(error => console.error(error))}>
-        Create Channel
-      </button> */}
+      <LoadingOverlay full={false} />
 
       <div className='h-12 w-full'>
         <div className='flex items-end justify-start gap-4 bg-green-med-dark/5 border-b-2 border-b-green-med-dark/25 w-full h-full px-4 text-sm font-medium'>

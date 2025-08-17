@@ -12,7 +12,6 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
     const fetchNotifications = async () => {
       const notifications = await fetchData.select("Notifications", '*', 'profile_id', user.profile_id)
       const sortedNotifications = notifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      console.log(notifications)
       setNotifications(sortedNotifications)
     }
     fetchNotifications()

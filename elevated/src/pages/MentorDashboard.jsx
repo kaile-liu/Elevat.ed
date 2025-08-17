@@ -12,6 +12,7 @@ import BadgePopup from '../components/badgePopup';
 import { io } from 'socket.io-client';
 import Tooltip from '@mui/material/Tooltip';
 import ConfirmationSnackbar from '../components/ui/ConfirmationSnackbar';
+import LoadingOverlay from '../components/ui/loadingOverlay';
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
@@ -168,6 +169,8 @@ const MentorDashboard = () => {
 
   return (
     <div className='flex flex-col w-screen h-screen overflow-x-hidden'>
+      <LoadingOverlay />
+
       <div className='h-12 w-full'>
         <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
       </div>

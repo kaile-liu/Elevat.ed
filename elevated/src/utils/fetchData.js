@@ -66,6 +66,15 @@ export const insert = async (table, data) => {
   if (error) throw error;
 };
 
+export const remove = async (table, eq, eqVal) => {
+  const { error } = await supabase
+    .from(table)
+    .delete()
+    .eq(eq, eqVal);
+
+  if (error) throw error;
+};
+
 // Auth.User
 export const getUserId = async () => {
     const { data: { session } } = await supabase.auth.getSession();

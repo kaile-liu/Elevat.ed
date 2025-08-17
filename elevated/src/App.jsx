@@ -92,14 +92,14 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
+              {/* <Route
                 path="/cas-advisor"
                 element={
                   <ProtectedRoute>
                     <CasAdvisorDashboard />
                   </ProtectedRoute>
                 }
-              />
+              /> */}
               <Route path="/" element={<Home />} />
             </Routes>
           </BrowserRouter>

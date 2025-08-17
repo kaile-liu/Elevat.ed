@@ -7,6 +7,7 @@ import * as fetchData from "../../utils/fetchData"
 import ProfilePopUp from "../profilePopUp";
 import TaskCard from '../taskCard'
 import ChatMessage from '../chatMessage'
+import LoadingOverlay from '../ui/loadingOverlay'
 
 const Event = ({event, date, start, end}) => {
     return (
@@ -184,7 +185,8 @@ const Home = ( { user } ) => {
       }, [users]);
 
   return (
-    <div className='flex gap-4 min-h-screen p-6'>
+    <div className='flex gap-4 min-h-screen p-6 relative'>
+        <LoadingOverlay full={false}/>
         <div className="flex flex-col text-green-dark">
             <p className='text-sm font-medium text-green-med-dark'>Hi {user.name}</p>
             <h1 className="text-2xl font-semibold mb-6">Welcome back,</h1>

@@ -81,10 +81,12 @@ const ProjectChat = ( { project, user, onMessage, messages, members }) => {
     // send new message
     const handleSendMessage = (e) => {
         e.preventDefault()
-        onMessage(newMessage, attachments, user.profile_id) // call message handler, passing in message text and profile_id
-        setNewMessage('') // reset new message state
-        setAttachments([])
-        notifyTaggedUsers()
+        if (newMessage.length > 0) {
+          onMessage(newMessage, attachments, user.profile_id) // call message handler, passing in message text and profile_id
+          setNewMessage('') // reset new message state
+          setAttachments([])
+          notifyTaggedUsers()
+        }
     }
 
     const handlePaperclipClick = (e) => {

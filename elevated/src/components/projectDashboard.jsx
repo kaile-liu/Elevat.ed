@@ -342,8 +342,10 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
                   <div className='bg-green-full/80 rounded-full p-1 hover:bg-green-full'><img src='/question-mark.png' className='w-3 h-3 invert'/></div>
                 </Tooltip>
               </div>
+              { !viewOnly &&
               <button className="bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75" onClick={() => setOpenPopup(true)}>Create Task +</button>
-            </div>
+              }
+              </div>
 
             <div className="grid md:grid-cols-3 md:grid-rows-1 gap-4 flex-1 max-h-full">
               {['todo', 'inprogress', 'done'].map((columnId) => {
@@ -376,7 +378,11 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
                           </div>
                         </DragOverlay>
                       : <div onClick={() => setSelectedTask(task)} key={task.task_id}>
-                            <TaskCard task={task} isDragging={false} draggable={!viewOnly}/>
+                            <TaskCard task={task} isDragging={false} draggable={columnId == "done" ? false : !viewOnly} onDelete={async () => {
+                              console.log('delete')
+                              // NOTE need to first remove all records related to this record by task_id
+                              await fetchData.remove('Project_tasks', 'task_id', task.task_id)
+                            }}/>
                           </div>
                     ))}
                   </DroppableColumn>

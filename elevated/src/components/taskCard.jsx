@@ -1,6 +1,6 @@
 import React from 'react'
 import { useEffect, useState } from 'react';
-import { GripVertical, Dot } from 'lucide-react';
+import { GripVertical, Dot, Trash } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import * as fetchData from "../utils/fetchData"
 
@@ -20,8 +20,9 @@ const priorityClasses = {
 }
 
 
-const DraggableCard = ({ id, setIsOpen, children, hasHandle, isDragging, draggable }) => {
-  console.log('draggable:', hasHandle)
+const DraggableCard = ({ id, setIsOpen, children, hasHandle, isDragging, draggable, onDelete }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
   });
@@ -35,19 +36,53 @@ const DraggableCard = ({ id, setIsOpen, children, hasHandle, isDragging, draggab
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative w-full ${hasHandle ? 'h-28' : 'h-19'} ${isDragging ? 'scale-110 skew-y-1 rotate-1 shadow-xl' : ''} bg-white p-3 rounded-xl border-2 border-green-light shadow-sm hover:cursor-pointer`}
+      className={`relative w-full ${hasHandle ? 'h-28' : 'h-19'} ${isDragging ? 'scale-110 skew-y-1 rotate-1 shadow-md' : ''} bg-white p-3 rounded-xl hover:cursor-pointer`}
     >
       { hasHandle && draggable &&
       <div className="absolute top-3 right-1 hover:cursor-grab" {...listeners} {...attributes}>
         <GripVertical className="text-gray-400" size={16} />
       </div>
       }
+      { hasHandle && draggable &&
+      <Trash className="text-gray-400 absolute bottom-3 right-2 hover:cursor-pointer hover:text-gray-500" size={16} onClick={(e) => {
+        e.stopPropagation()
+        setShowConfirm(true);
+      }}/>
+      }
+
+            {showConfirm && (
+        <div className="absolute bottom-8 right-0 bg-white border-2 border-green-med-dark/25 shadow-lg rounded-md p-2 text-sm z-50">
+          <p className="mb-2">Delete this task?</p>
+          <div className="flex justify-end gap-2">
+            <button
+              className="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowConfirm(false);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="text-xs px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+                setShowConfirm(false);
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       {children}
     </div>
   );
 };
 
-const TaskCard = ({ task, isDragging=false, isSmall=false, draggable }) => {
+const TaskCard = ({ task, isDragging=false, isSmall=false, draggable, onDelete }) => {
     const [assignees, setAssignees] = useState([]);
     const [profiles, setProfiles] = useState([]);
 
@@ -74,7 +109,7 @@ const TaskCard = ({ task, isDragging=false, isSmall=false, draggable }) => {
     }, []);
         
     return (
-        <DraggableCard id={task.task_id} hasHandle={!isSmall} isDragging={isDragging} draggable={draggable}>
+        <DraggableCard id={task.task_id} hasHandle={!isSmall} isDragging={isDragging} draggable={draggable} onDelete={onDelete}>
             <div className={`text-xs ${priorityClasses[task.priority].text} ${priorityClasses[task.priority].bg} w-fit px-2 py-1 rounded-md font-semibold mb-1`}>
                 {task.priority}
             </div>
