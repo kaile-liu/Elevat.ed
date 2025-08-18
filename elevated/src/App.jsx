@@ -38,7 +38,7 @@ const steps = [
   },
   {
     selector: '#project-page',
-    content: 'Here you can see your project team members and communicate via the team chat. Once you complete the training, the project brief will be unlocked!',
+    content: 'Here you can see your project team members, communicate via the team chat, and manage your project tasks to stay on top of deadlines for deliverables.',
   },
   {
     selector: '#trackr-page-btn',

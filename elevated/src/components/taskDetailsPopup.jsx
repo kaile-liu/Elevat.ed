@@ -66,7 +66,7 @@ const TaskDetailsPopup = ({ task, onClose }) => {
             {profiles.map((profile) => (
             <div key={profile.profile_id} className='relative group'>
                 <p className='absolute whitespace-nowrap -top-8 left-1/2 -translate-x-1/2 bg-white/90 text-xs text-black px-2 py-1 rounded shadow opacity-0 group-hover:opacity-100 transition'>{profile.name}</p>
-                <img src={profile.pfp} alt={profile.name} className={`object-cover w-8 h-8 rounded-full`}/>
+                <img src={profile.pfp ? profile.pfp : '/profile.png'} alt={profile.name} className={`object-cover w-8 h-8 rounded-full`}/>
             </div>
             ))}
         </div>
