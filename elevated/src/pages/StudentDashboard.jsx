@@ -13,8 +13,20 @@ import Chat from '../components/screens/Chat.jsx';
 import Leaderboard from '../components/screens/leaderboard.jsx';
 import Settings from '../components/screens/settings.jsx';
 import LoadingOverlay from '../components/ui/loadingOverlay.jsx';
+import { TourProvider, useTour } from '@reactour/tour'
 
 const StudentDashboard = () => {
+  const { setIsOpen } = useTour()
+
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     setIsOpen(true)
+  //     console.log('showing tour')
+  //   }, 2000) // wait for Dashboard to render
+  //   return () => clearTimeout(timeout);
+  // }, [setIsOpen])
+
+
   const [selected, setSelected] = useState('home');
   const [userData, setUserData] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -67,7 +79,7 @@ const StudentDashboard = () => {
       //   return <Cas />;
       case 'trackr':
         return <Opportunities />;
-      case 'mentors':
+      case 'chat':
         return <Chat />;
       case 'leaderboard':
         return <Leaderboard />;

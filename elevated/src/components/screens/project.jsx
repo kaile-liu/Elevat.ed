@@ -119,7 +119,7 @@ const Project = () => {
     };
 
     return (
-        <div className="w-full min-h-full flex items-center justify-center p-6 relative">
+        <div id='project-page' className="w-full min-h-full flex items-center justify-center p-6 relative">
             <LoadingOverlay full={false} />
             {project != null ? <div className="w-full h-full self-start">
                 <ProjectDashboard project={project} isLocked={isLocked}/>

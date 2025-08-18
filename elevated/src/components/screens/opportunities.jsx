@@ -67,7 +67,7 @@ const Opportunities = () => {
 
     
     return (
-    <div className='grid grid-cols-4 gap-4 p-6 relative'>
+    <div id='trackr-page' className='grid grid-cols-4 gap-4 p-6 relative'>
         <LoadingOverlay full={false} />
         <div className='col-span-1 h-fit bg-green-light px-4 py-6 rounded-2xl'>
             <p className='text-xl font-medium mb-4'>Filter opportunities</p>

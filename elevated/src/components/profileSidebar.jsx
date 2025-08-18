@@ -7,10 +7,11 @@ import { Popover, Snackbar } from '@mui/material';
 import { Pen, Pencil } from "lucide-react"; 
 import ConfirmationSnackbar from './ui/ConfirmationSnackbar';
 import * as notifications from "../utils/notifications"
-import ImageCropper from "./imageCropper";
+import { useTour } from '@reactour/tour'
 
 const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
-  // const [profilePic, setProfilePic] = useState('/profile.png')
+  const { setCurrentStep, currentStep } = useTour();
+
   const [teamMembers, setTeamMembers] = useState([])
   const [selectedMember, setSelectedMember] = useState(null)
   const [endorsementUsed, setEndorsementUsed] = useState(false);
@@ -130,8 +131,11 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
   };
 
   return (
-    <div ref={profileSidebarRef} className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-6 h-full p-8 pt-10 bg-[#FDFFFB]'>
-      <img src='/chevron-down.png' className='w-4 h-4 cursor-pointer absolute top-4 left-4 rotate-270' onClick={() => setIsProfileBarOpen(open => !open)}></img>
+    <div ref={profileSidebarRef} id='profile-sidebar'  className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-6 h-full p-8 pt-10 bg-[#FDFFFB]'>
+      <img id='close-profile-sidebar-btn' src='/chevron-down.png' className='w-4 h-4 cursor-pointer absolute top-4 left-4 rotate-270' onClick={() => {
+        if (currentStep === 4) setCurrentStep(currentStep + 1);
+        setIsProfileBarOpen(open => !open)
+      }}></img>
       <div>
         <img src={user.pfp ? user.pfp : '/profile.png'} className="w-24 h-24 mx-auto rounded-full relative z-1"></img>
         <div className='flex -mt-4 relative z-3'>
