@@ -6,6 +6,7 @@ import { supabase } from '../../integrations/supabase/client';
 
 const Settings = ({ user }) => {
   const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -19,6 +20,7 @@ const Settings = ({ user }) => {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedFile(file); // store file
       const reader = new FileReader();
       reader.onload = () => {
         setImageSrc(reader.result);
@@ -33,23 +35,36 @@ const Settings = ({ user }) => {
   }, []);
 
   const handleCropConfirm = async () => {
-    const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-    // Upload or update logic goes here
-    console.log("Cropped image blob:", croppedImage);
+    const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels, selectedFile.type);
     setShowCropper(false);
     const blob = croppedImage.blob
+    console.log('blob:', blob)
+    // Detect file extension based on blob type
+    const extension = blob.type === "image/png" ? "png" : "jpg";
+    const fileName = `profile-${user.profile_id}.${extension}`; 
+
+    // remove old file
+     const { dataDel, errorDel } = await supabase.storage
+    .from("storage")
+    .remove([`profile-${user.profile_id}.png`, `profile-${user.profile_id}.jpg`]);
+    if (errorDel) {
+        console.error('Delete error:', errorDel.message);
+        return null;
+    }
+    console.log('removed old file', user.pfp)
+
+    // upload new file
     const { data, error } = await supabase.storage
         .from('storage') // your bucket name
-        .upload(`profile-${user.profile_id}`, blob, {
+        .upload(fileName, blob, {
         cacheControl: '3600',
-        upsert: true,
-        contentType: blob.type || 'image/png',
+        upsert: false,
         });
-
     if (error) {
         console.error('Upload error:', error.message);
         return null;
     }
+    console.log('new file uploaded')
   };
 
   return (

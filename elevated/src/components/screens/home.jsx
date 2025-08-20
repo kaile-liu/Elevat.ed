@@ -8,41 +8,53 @@ import ProfilePopUp from "../profilePopUp";
 import TaskCard from '../taskCard'
 import ChatMessage from '../chatMessage'
 import LoadingOverlay from '../ui/loadingOverlay'
+import Popup from '../ui/popup'
+import * as rewards from "../../utils/rewards"
+import { useTour } from '@reactour/tour'
 
-const Event = ({event, date, start, end}) => {
-    return (
-      <div className='flex flex-col items-start border-l-4 border-green-full px-4 mb-4'>
-          <h1 className='font-medium text-lg'>{event}</h1>
-          <p className='text-sm text-green-med-dark'>{date}  {start} - {end}</p>
-      </div>
-    )
-  }
+// const Event = ({event, date, start, end}) => {
+//     return (
+//       <div className='flex flex-col items-start border-l-4 border-green-full px-4 mb-4'>
+//           <h1 className='font-medium text-lg'>{event}</h1>
+//           <p className='text-sm text-green-med-dark'>{date}  {start} - {end}</p>
+//       </div>
+//     )
+//   }
 
-const Task = ({task, deadline}) => {
-    return (
-        <div className='flex justify-start items-center gap-4 mb-4'>
-            <div className='w-4 h-4 border-2 border-green-full'></div>
-            <div>
-                <h1 className='font-medium text-lg'>{task}</h1>
-                <p className='text-sm text-green-med-dark'>{deadline}</p>
-            </div>
-        </div>
-    )
-}
+// const Task = ({task, deadline}) => {
+//     return (
+//         <div className='flex justify-start items-center gap-4 mb-4'>
+//             <div className='w-4 h-4 border-2 border-green-full'></div>
+//             <div>
+//                 <h1 className='font-medium text-lg'>{task}</h1>
+//                 <p className='text-sm text-green-med-dark'>{deadline}</p>
+//             </div>
+//         </div>
+//     )
+// }
 
-const Message = ({message, date, username, userpfp}) => {
-    return (
-        <div className='flex justify-start items-center gap-4 mb-4'>
-            <img className='w-8 h-8' src={userpfp}></img>
-            <div>
-                <h1 className='font-medium text-sm'>{username} <span className='font-normal text-green-med-dark'>{date}</span></h1>
-                <p className='text-sm text-green-med-dark max-w-full line-clamp-1'>{message}</p>
-            </div>
-        </div>
-    )
-}
+// const Message = ({message, date, username, userpfp}) => {
+//     return (
+//         <div className='flex justify-start items-center gap-4 mb-4'>
+//             <img className='w-8 h-8' src={userpfp}></img>
+//             <div>
+//                 <h1 className='font-medium text-sm'>{username} <span className='font-normal text-green-med-dark'>{date}</span></h1>
+//                 <p className='text-sm text-green-med-dark max-w-full line-clamp-1'>{message}</p>
+//             </div>
+//         </div>
+//     )
+// }
 
 const Home = ( { user } ) => {
+    const [getStartedTasksPopup, setGetStartedTasksPopup] = useState(false)
+    const { setCurrentStep, currentStep, setIsOpen } = useTour();
+    const [completed, setCompleted] = useState(() => {
+        const done = Array.isArray(user.get_started_tasks_complete) ? user.get_started_tasks_complete : [];
+        return [1, 2, 3, 4].map(id => done.includes(id));
+        });
+    const [taskAnchor, setTaskAnchor] = useState(null);
+    const tasks = rewards.getStartedTasks     
+
     const [isLoading, setIsLoading] = useState(true)
     const [users, setUsers] = useState([])
     const [usersToDisplay, setUsersToDisplay] = useState([])
@@ -83,31 +95,9 @@ const Home = ( { user } ) => {
         }
     }, [mentorMessages]);
 
-    // const renderBars = () => {
-    //     // dummy testing data
-    //     const progress = [50, 30, 60, 75, 0, 0, 0, 0]
-    //     return (
-    //         <div className="w-full flex-1 flex gap-2 justify-evenly">
-    //           {progress.map((percentage, week) => (
-    //             <Bar percentage={percentage} key={week}/>
-    //           ))}
-    //         </div>
-    //       );
-    // }
-
     // FETCH DATA
     useEffect(() => {
     const fetchUserData = async () => {
-        // fetch('https://elevat-ed.onrender.com/slack/create-channel', {
-        // method: 'POST',
-        // headers: {
-        //     'Content-Type': 'application/json'
-        // },
-        // body: JSON.stringify({ channelName: 'frankfurt-international-school' })
-        // })
-        // .then(res => res.json())
-        // .then(data => console.log(data))
-        // .catch(err => console.error('Request error:', err));
         // fetch USERS
         const allUsers = await fetchData.select("Users", "*", "school", user.school, 'points', false)
         const allStudents = allUsers.filter(user => user.role == 'Student');
@@ -120,6 +110,7 @@ const Home = ( { user } ) => {
         const assignedTasks = await fetchData.select("Project_task_assignees", "*", "project_member_id", projectMember.project_member_id)
         const assignedTasksIds = assignedTasks.map(task => task.task_id);
         const filteredTasks = projectTasksData.filter(task => assignedTasksIds.includes(task.task_id))
+        
         // Create a copy of the empty columns on component mount
         const updatedColumns = {
         todo: [],
@@ -158,6 +149,8 @@ const Home = ( { user } ) => {
         } catch (err) {
         console.error('Failed to fetch Slack messages:', err);
         }
+
+        if ([1, 2, 3, 4].some(id => !user.get_started_tasks_complete?.includes(id))) setGetStartedTasksPopup(true)
     }
     fetchUserData()
     }, [])
@@ -183,6 +176,21 @@ const Home = ( { user } ) => {
         //   });
         // }
       }, [users]);
+
+    const [trainingOpened, setTrainingOpened ] = useState(user.get_started_tasks_complete?.includes(4))
+    const handleStepFour = async () => {
+        if (!trainingOpened) {
+        await fetchData.update(
+            "Users",
+            { get_started_tasks_complete: [...(user.get_started_tasks_complete || []), 4] },
+            "profile_id",
+            user.profile_id
+        );
+        setTrainingOpened(true)
+        rewards.reward(user, rewards.getStartedTasks.find(task => task.id === 4).reward)
+        }
+        window.open("https://example.com", "_self")
+    }
 
   return (
     <div className='flex gap-4 min-h-screen p-6 relative'>
@@ -405,6 +413,66 @@ const Home = ( { user } ) => {
 
             </div>
         </div>
+
+        {getStartedTasksPopup && <Popup setIsOpen={setGetStartedTasksPopup}>
+            <h2 className="font-semibold text-lg pb-4 w-full border-b-2 border-green-med-dark/25">Getting Started</h2>
+            <h3 className="font-semibold mb-1">Welcome {user.name}! 👋</h3>
+            <p className='text-sm'>Here are some tasks to get you ahead of the game!</p>
+            <div>
+                <div className='w-full relative h-4 rounded-full bg-green-light overflow-hidden'>
+                    <div className={`absolute left-0 top-0 h-full bg-green-full`}
+                    style={{ width: `${completed.filter(t => t).length * 25}%` }}></div>
+                </div>
+                <p className='text-sm mt-2'>{completed.filter(t => t).length*25}% Completed - <span className='text-green-full'>{completed.filter(t => t).length === 0 ? 'Get Started!' : completed.filter(t => t).length < 3 ? 'Keep it up!' : 'Nice work!'}</span></p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+                {tasks.map((task, idx) => (
+                <div key={task.id} className="flex items-center justify-between">
+                    {/* Tick circle */}
+                    <div className="flex items-center gap-2">
+                        <div
+                            className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                            completed[idx]
+                                ? "bg-green-full border-green-full text-white"
+                                : "bg-gray-200 border-gray-300"
+                            }`}
+                        >
+                            {completed[idx] && <span className="text-xs">✓</span>}
+                        </div>
+                        <p className={`text-sm ${completed[idx] ? 'line-through decoration-green-med-dark' : ''}`}>{task.label}</p>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                    
+                    <button
+                        className='bg-green-full text-white px-4 py-1 rounded-md'
+                        onClick={() => {
+                        switch (task.id) {
+                            case 1:
+                            setCurrentStep(0);
+                            setIsOpen(true)
+                            break
+                            case 2:
+                            document.getElementById('project-page-btn').click()
+                            break
+                            case 3:
+                            document.getElementById('chat-page-btn').click()
+                            break
+                            case 4:
+                            handleStepFour()
+                            break
+                        }
+                        setGetStartedTasksPopup(false)
+                        }}
+                    >
+                        {task.action}
+                    </button>
+                    <span className='flex items-center text-sm !text-green-dark/80'>+{task.reward} <img className='h-6 w-6' src='/points.png'/></span>
+                    </div>
+                </div>
+                ))}
+            </div>
+            </Popup>}
         
     </div>
   )

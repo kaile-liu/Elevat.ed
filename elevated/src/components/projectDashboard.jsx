@@ -4,6 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { SquarePen, Upload, FileText, ImageIcon, ExternalLink, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as fetchData from "../utils/fetchData"
+import * as rewards from "../utils/rewards"
 import CreateTaskPopup from './createTaskPopup';
 import TaskCard from './taskCard';
 import ProjectChat from './projectChat';
@@ -53,7 +54,7 @@ const DroppableColumn = ({ id, title, count, color, children }) => {
   );
 };
 
-const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
+const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
   const [activeTab, setActiveTab] = useState('Client Overview');
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileTabOpen, setIsProfileTabOpen] = useState(false);
@@ -67,7 +68,7 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
   // store project states below
-  const [user, setUser] = useState({})
+  // const [user, setUser] = useState({})
   const [teamMembers, setTeamMembers] = useState([])
   const [messages, setMessages] = useState([])
   const [openPopup, setOpenPopup] = useState(false)
@@ -78,8 +79,21 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
     done: [],
   });
 
+  const [userMessaged, setUserMessaged ] = useState(user.get_started_tasks_complete?.includes(2))
+  console.log('user message: ', userMessaged)
   // send message to Slack Channel via the '/slack/send-message' endpoint
   const handleMessage = async (messageText, attachments, profile_id) => {
+    if (!userMessaged) {
+        await fetchData.update(
+          "Users",
+          { get_started_tasks_complete: [...(user.get_started_tasks_complete || []), 2] },
+          "profile_id",
+          user.profile_id
+        );
+        setUserMessaged(true)
+        rewards.reward(user, rewards.getStartedTasks.find(task => task.id === 2).reward)
+      }
+    
     try {
       const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
         method: 'POST',
@@ -108,9 +122,9 @@ const ProjectDashboard = ( { project, isLocked, viewOnly=false } ) => {
   useEffect(() => {
     const fetchProjectData = async () => {
       // fetch USER
-      const userId = await fetchData.getUserId()
-      const user = await fetchData.selectSingle("Users", "*", "user_id", userId)
-      setUser(user)
+      // const userId = await fetchData.getUserId()
+      // const user = await fetchData.selectSingle("Users", "*", "user_id", userId)
+      // setUser(user)
 
       // fetch MEMBERS
       const teamMembers = await fetchData.select("Project_members", "*", "project_id", project.project_id)

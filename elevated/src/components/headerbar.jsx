@@ -3,6 +3,7 @@ import { IconButton, Badge } from '@mui/material';
 import NotificationPanel from './notificationPanel';
 import { supabase } from "../integrations/supabase/client"
 import * as fetchData from "../utils/fetchData"
+import * as rewards from "../utils/rewards"
 import { useTour } from '@reactour/tour'
 import { Popover, LinearProgress, Button } from '@mui/material';
 //import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -15,18 +16,12 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
   const [profilePic, setProfilePic] = useState('/profile.png')
   const [notifications, setNotifications] = useState([])
 
-  const tasks = [
-    { id: 1, label: "Take the portal tour" },
-    { id: 2, label: "Set your pfp" },
-    { id: 3, label: "Say hi in project group chat" },
-    { id: 4, label: "Say hi to your mentor" },
-    { id: 5, label: "Visit the training program" },
-  ];
+  const tasks = rewards.getStartedTasks 
 
   const [taskAnchor, setTaskAnchor] = useState(null);
   const [completed, setCompleted] = useState(() => {
     const done = Array.isArray(user.get_started_tasks_complete) ? user.get_started_tasks_complete : [];
-    return [1, 2, 3, 4, 5].map(id => done.includes(id));
+    return [1, 2, 3, 4].map(id => done.includes(id));
   });
 
   const handleTaskOpen = (e) => setTaskAnchor(e.currentTarget);
@@ -44,6 +39,7 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
     fetchNotifications()
   }, [])
 
+  const [tourTaken, setTourTaken ] = useState(user.get_started_tasks_complete?.includes(1))
   useEffect(() => {
     const updateTaskCompletion = async () => {
       const currentTasks = Array.isArray(user.get_started_tasks_complete) 
@@ -54,12 +50,16 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
     } 
     if (currentStep === 13) {
       // Last step reached → mark as complete
-      updateTaskCompletion()
-      setCompleted(prev => {
-        const updated = [...prev];
-        updated[0] = true;
-        return updated;
-      });
+      if (!tourTaken){
+        setTourTaken(true)
+        rewards.reward(user, tasks.find(task => task.id === 1).reward)
+        updateTaskCompletion()
+        setCompleted(prev => {
+          const updated = [...prev];
+          updated[0] = true;
+          return updated;
+        });
+      }
     }
 }, [currentStep]);
 
@@ -68,6 +68,21 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
   const handleOpen = (e) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);  
   const open = Boolean(anchorEl);
+
+  const [trainingOpened, setTrainingOpened ] = useState(user.get_started_tasks_complete?.includes(4))
+  const handleStepFour = async () => {
+    if (!trainingOpened) {
+      await fetchData.update(
+        "Users",
+        { get_started_tasks_complete: [...(user.get_started_tasks_complete || []), 4] },
+        "profile_id",
+        user.profile_id
+      );
+      setTrainingOpened(true)
+      rewards.reward(user, rewards.getStartedTasks.find(task => task.id === 4).reward)
+    }
+    window.open("https://example.com", "_self")
+  }
 
   return (
     <div className='flex items-center justify-between p-4 bg-green-light border-b-green-med-dark/25 border-b-2 w-full h-full'>
@@ -98,7 +113,7 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
               anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
             >
               <div className="p-4 w-md">
-                <p className="font-semibold text-green-dark mb-2">Get Started Tasks</p>
+                <p className="font-semibold text-green-dark mb-2">Get Started Tasks <span className='pl-2 font-medium'>{completed.filter(x => x).length}/4</span></p>
                 <div className="flex flex-col gap-3">
                   {tasks.map((task, idx) => (
                     <div key={task.id} className="flex items-center justify-between">
@@ -113,21 +128,36 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
                         >
                           {completed[idx] && <span className="text-xs">✓</span>}
                         </div>
-                        <p className="text-sm">{task.label}</p>
+                        <p className={`text-sm ${completed[idx] ? 'line-through decoration-green-med-dark' : ''}`}>{task.label}</p>
                       </div>
-                      <button
-                        className='bg-green-full text-white px-4 py-1 rounded-md'
-                        onClick={() => {
-                          if (task.id === 1) {
-                            // ✅ Hook up the portal tour
-                            setCurrentStep(0);
-                            setIsOpen(true)
-                          }
-                          setTaskAnchor(null)
-                        }}
-                      >
-                        Go
-                      </button>
+                      <div className='flex items-center gap-2'>
+                        
+                        <button
+                          className='bg-green-full text-white px-4 py-1 rounded-md'
+                          onClick={() => {
+                            switch (task.id) {
+                              case 1:
+                                setCurrentStep(0);
+                                setIsOpen(true)
+                                break
+                              case 2:
+                                document.getElementById('project-page-btn').click()
+                                break
+                              case 3:
+                                document.getElementById('chat-page-btn').click()
+                                break
+                              case 4:
+                                handleStepFour()
+                                break
+                            }  
+
+                            setTaskAnchor(null)
+                          }}
+                        >
+                          {task.action}
+                        </button>
+                        <span className='flex items-center text-sm !text-green-dark/80'>+{task.reward} <img className='h-6 w-6' src='/points.png'/></span>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -74,13 +74,11 @@ const StudentDashboard = () => {
       case 'learn':
         return <div>learn View</div>;
       case 'project':
-        return <Project />;
-      // case 'cas':
-      //   return <Cas />;
+        return <Project user={userData}/>;
       case 'trackr':
         return <Opportunities />;
       case 'chat':
-        return <Chat />;
+        return <Chat user={userData}/>;
       case 'leaderboard':
         return <Leaderboard />;
       case 'settings':

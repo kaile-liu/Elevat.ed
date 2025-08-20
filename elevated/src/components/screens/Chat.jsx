@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Upload, FileText, X, Linkedin } from 'lucide-react';
 import * as fetchData from "../../utils/fetchData";
+import * as rewards from "../../utils/rewards";
 import ChatBox from '../chatBox';
 import { io } from 'socket.io-client';
 import LoadingOverlay from '../ui/loadingOverlay';
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
-const Chat = () => {
+const Chat = ( { user } ) => {
   const [selectedTab, setSelectedTab] = useState('Mentor');
   const tabs = ['Mentor', 'School', 'Support Team'];
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +22,7 @@ const Chat = () => {
   };
 
   // fetch chat data
-  const [user, setUser] = useState({})
+  // const [user, setUser] = useState({})
   const [mentor, setMentor] = useState({})
   const [isMentorOpen, setIsMentorOpen] = useState(false);
   const [mentorChannelId, setMentorChannelId] = useState(null)
@@ -32,14 +33,14 @@ const Chat = () => {
   useEffect(() => {
       const fetchChatData = async () => {
         // fetch USER
-        const userId = await fetchData.getUserId()
-        const user = await fetchData.selectSingle("Users", "*", "user_id", userId)
-        setUser(user)
-
+        // const userId = await fetchData.getUserId()
+        // const user = await fetchData.selectSingle("Users", "*", "user_id", userId)
+        // setUser(user)
         // fetch MENTOR
         const mentor = await fetchData.selectSingle("Student_mentors", "*", "student_id", user.profile_id)
         setMentorChannelId(mentor.student_mentor_id)
         mentorChannelIdRef.current = mentor.student_mentor_id; // ✅ update ref
+        
         console.log(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${mentor.student_mentor_id}`)
         const mentorProfile = await fetchData.selectSingle("Mentors", "*", "mentor_id", mentor.mentor_id)
         const mentorUserProfile = await fetchData.selectSingle("Users", "*", "profile_id", mentorProfile.profile_id)
@@ -89,8 +90,19 @@ const Chat = () => {
       };
   }, [])
 
+  const [userMessaged, setUserMessaged ] = useState(user.get_started_tasks_complete?.includes(3))
   // handle message send
   const handleMessage = async (messageText, profile_id) => {
+    if (!userMessaged) {
+      await fetchData.update(
+        "Users",
+        { get_started_tasks_complete: [...(user.get_started_tasks_complete || []), 3] },
+        "profile_id",
+        user.profile_id
+      );
+      setUserMessaged(true)
+      rewards.reward(user, rewards.getStartedTasks.find(task => task.id === 3).reward)
+    }
     try {
       const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
         method: 'POST',
