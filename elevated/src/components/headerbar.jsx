@@ -6,7 +6,7 @@ import * as fetchData from "../utils/fetchData"
 import * as rewards from "../utils/rewards"
 import { useTour } from '@reactour/tour'
 import { Mail } from 'lucide-react'
-import Popup from "./ui/Popup" 
+import Popup from "./ui/popup" 
 import ImageLightbox from './imageLightbox';
 import { createPortal } from "react-dom";
 
