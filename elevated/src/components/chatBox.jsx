@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { SendHorizontal, Paperclip } from 'lucide-react';
 import ChatMessage from './chatMessage';
+import LoadingOverlay from './ui/loadingOverlay';
 
-const ChatBox = ( { user, onMessage, messages } ) => {
+const ChatBox = ( { user, onMessage, messages, smaller=0 } ) => {
     const [newMessage, setNewMessage] = useState('')
     const chatContainerRef = React.useRef(null);
 
@@ -27,11 +28,13 @@ const ChatBox = ( { user, onMessage, messages } ) => {
 
 
   return (
-    <div className="flex flex-col h-full w-full bg-white p-4 shadow">
+    <div className={`flex flex-col h-[${95-smaller}vh] w-full bg-white p-4 shadow relative`}>
+      <LoadingOverlay full={false}/>
      {/* Messages */}
      <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4">
        {messages.length === 0 ? (
-         <div className="text-center text-sm text-muted-foreground">
+         <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+          <img className='w-8 h-8' src='/chat.png'/>
            No messages yet. Start the conversation!
          </div>
        ) : null}

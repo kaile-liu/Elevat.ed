@@ -78,19 +78,21 @@ const MentorDashboard = () => {
   useEffect(() => {
     const fetchChatData = async () => {
       //const mentorProfile = await fetchData.selectSingle('Mentors', '*', 'profile_id', userData.profile_id)
-      const studentMentorPair = await fetchData.selectSingle("Student_mentors", "*", "student_id", selectedMember.profile_id)
-      setMentorChannelId(studentMentorPair.student_mentor_id)
-      mentorChannelIdRef.current = studentMentorPair.student_mentor_id; // ✅ update ref
-      // fetch MENTOR MESSAGES
-      try {
-        const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${studentMentorPair.student_mentor_id}`);
-        if (!response.ok) {
-          throw new Error(`Error fetching messages: ${response.statusText}`);
+      if (selectedMember) {
+        const studentMentorPair = await fetchData.selectSingle("Student_mentors", "*", "student_id", selectedMember.profile_id)
+        setMentorChannelId(studentMentorPair.student_mentor_id)
+        mentorChannelIdRef.current = studentMentorPair.student_mentor_id; // ✅ update ref
+        // fetch MENTOR MESSAGES
+        try {
+          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=mentor-${studentMentorPair.student_mentor_id}`);
+          if (!response.ok) {
+            throw new Error(`Error fetching messages: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setMessages(data.messages) // array of messages
+        } catch (err) {
+          console.error('Failed to fetch Slack messages:', err);
         }
-        const data = await response.json();
-        setMessages(data.messages) // array of messages
-      } catch (err) {
-        console.error('Failed to fetch Slack messages:', err);
       }
     }
     fetchChatData()
@@ -148,7 +150,7 @@ const MentorDashboard = () => {
       case 'Project overview':
         console.log(selected)
         if (selected) {
-          return <div className='p-4'><ProjectDashboard project={menuItems[selected].project} isLocked={false} viewOnly={true}/></div>
+          return <div className='p-4'><ProjectDashboard user={userData} project={menuItems[selected].project} isLocked={false} viewOnly={true}/></div>
         } else {
           return <div>loading project</div>
         }

@@ -10,9 +10,13 @@ const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
 const test_users = [
     {
-        email: 'admin@example.com',
+        email: 'itskaileliu@gmail.com',
         password: 'testpassword'
     },
+    // {
+    //     email: 'admin@example.com',
+    //     password: 'testpassword'
+    // },
     // {
     //     email: 'testmentor@example.com',
     //     password: 'testpassword'

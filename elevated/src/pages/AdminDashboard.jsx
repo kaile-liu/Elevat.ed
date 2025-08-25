@@ -295,6 +295,7 @@ const AdminDashboard = () => {
 
                 {/* Chat box */}
                 {selectedMember ? <ChatBox
+                  key={selectedMember.profile_id} // ✅ forces remount when member changes
                   user={selectedMember}
                   onMessage={handleStudentMessage}
                   messages={studentMessages}
@@ -306,7 +307,7 @@ const AdminDashboard = () => {
             )}
 
             {selectedProject && menuItems[selectedSchool]?.[selectedProject]?.project
-            && <div className='p-4'><ProjectDashboard key={`${selectedSchool}-${selectedProject}`} project={menuItems[selectedSchool][selectedProject].project} isLocked={false} viewOnly={true}/></div>
+            && <div className='p-4'><ProjectDashboard key={`${selectedSchool}-${selectedProject}`} user={userData} project={menuItems[selectedSchool][selectedProject].project} isLocked={false} viewOnly={true}/></div>
             }
 
           </div>

@@ -5,6 +5,7 @@ import * as rewards from "../../utils/rewards";
 import ChatBox from '../chatBox';
 import { io } from 'socket.io-client';
 import LoadingOverlay from '../ui/loadingOverlay';
+import { supabase } from "../../integrations/supabase/client"; // Supabase client
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
@@ -12,6 +13,7 @@ const Chat = ( { user } ) => {
   const [selectedTab, setSelectedTab] = useState('Mentor');
   const tabs = ['Mentor', 'School', 'Support Team'];
   const [isOpen, setIsOpen] = useState(false);
+  const [supportMessage, setSupportMessage] = useState('');
   const [files, setFiles] = useState([]);
   const handleFileChange = (e) => {
     const newFiles = Array.from(e.target.files);
@@ -29,6 +31,7 @@ const Chat = ( { user } ) => {
   const mentorChannelIdRef = useRef(null); // ✅ ref to avoid stale closure
   const [messages, setMessages] = useState([])
   const [schoolMessages, setSchoolMessages] = useState([])
+  const [adminMessages, setAdminMessages] = useState([])
 
   useEffect(() => {
       const fetchChatData = async () => {
@@ -72,17 +75,38 @@ const Chat = ( { user } ) => {
         } catch (err) {
           console.error('Failed to fetch school Slack messages:', err);
         }
+        // fetch ADMIN / USER MESSAGES
+        try {
+          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=student-${user.profile_id}`);
+          if (!response.ok) {
+            throw new Error(`Error fetching messages: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setAdminMessages(data.messages) // array of messages
+        } catch (err) {
+          console.error('Failed to fetch admin/student Slack messages:', err);
+        }
       }
       fetchChatData()
 
       // listen to web socket events for new messages
       socket.on('new_message', (msg) => {
         console.log('web socket event detected, message: ', msg) 
-        const id = msg.channel.split('-').pop(); 
-        console.log(id, mentorChannelIdRef.current)
+        const channel = msg.channel; 
+        const id = channel.split('-').pop(); 
+
+        // ✅ Mentor channel: mentor-{mentorChannelId}
         if (id == mentorChannelIdRef.current) {
             setMessages(prev => [...prev, msg.message]); // update messages state with new messages
           }
+        // ✅ Admin channel: student-{user.profile_id}
+        else if (channel === `student-${user.profile_id}`) {
+          setAdminMessages((prev) => [...prev, msg.message]);
+
+        // ✅ School channel: school-{school-name}
+        } else if (channel === `school-${user.school.toLowerCase().replace(/\s+/g, "-")}`) {
+          setSchoolMessages((prev) => [...prev, msg.message]);
+        }
       });
 
       return () => {
@@ -154,6 +178,32 @@ const Chat = ( { user } ) => {
     }
   }
 
+  // handle message send
+  const handleAdminMessage = async (messageText, profile_id) => {
+    try {
+      const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channel: `student-${user.profile_id}`,
+          text: messageText,
+          profile_id: profile_id
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error sending message: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Message sent:', data.message);
+    } catch (err) {
+      console.error('Failed to send message:', err);
+    }
+  }
+
   return (
     <div id='chat-page' className='flex flex-col w-full h-full relative'>
 
@@ -192,6 +242,8 @@ const Chat = ( { user } ) => {
               rows={4}
               className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-full resize-none"
               placeholder="Enter your message..."
+              onChange={(e) => setSupportMessage(e.target.value)}
+              value={supportMessage}
             />
             <label className="block mb-2 text-sm font-medium text-gray-700 cursor-pointer">
               <span className="flex items-center gap-2">
@@ -200,7 +252,7 @@ const Chat = ( { user } ) => {
               </span>
               <input
                 type="file"
-                accept=".pdf,image/*"
+                accept="image/*"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
@@ -228,7 +280,7 @@ const Chat = ( { user } ) => {
                       )}
 
                       {/* File name */}
-                      <span className="text-sm text-gray-800">{file.name}</span>
+                      <span className="text-sm text-gray-800 truncate max-w-[85%]">{file.name}</span>
                     </div>
 
                     {/* Actions */}
@@ -257,7 +309,31 @@ const Chat = ( { user } ) => {
                 ))}
               </ul>
             ) : <p className='text-sm text-gray-500'>No files to preview</p>}
-            <button className="mt-4 bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75">
+            <button className="mt-4 bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75"
+            onClick={async () => {
+              // here loop over each attachment file attached and upload it to supabase storage bucket 'Screenshots'
+              // name it a unique id, and then fetch the public url of the file and add it into a screenshots array, which will be inserted below into the new record
+              const screenshots = [];
+              // Upload each file
+              for (const file of files) {
+                const fileName = `${user.profile_id}-${Date.now()}-${file.name}`;
+                const { data, error } = await supabase.storage
+                  .from("Screenshots")
+                  .upload(fileName, file);
+                if (error) {
+                  console.error("Upload failed:", error.message);
+                  continue;
+                }
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                  .from("Screenshots")
+                  .getPublicUrl(fileName);
+                if (urlData?.publicUrl) screenshots.push(urlData.publicUrl);
+              }
+              console.log('files uploaded: ', screenshots)
+              await fetchData.insert('Support_tickets', {student_id: user.profile_id, message: supportMessage, screenshots: screenshots})
+              setIsOpen(false)
+            }}>
               Submit
             </button>
           </div>
@@ -273,10 +349,12 @@ const Chat = ( { user } ) => {
               <span className="text-gray-600 text-xs max-w-[24ch] line-clamp-2">{mentor.bio ? mentor.bio : 'Mentor bio'}</span> 
             </div>
           </div>
-          <ChatBox user={user} onMessage={handleMessage} messages={messages}/>
+          <ChatBox user={user} onMessage={handleMessage} messages={messages} smaller={5}/>
         </div>}
-      {selectedTab == "School" && <ChatBox user={user} onMessage={handleSchoolMessage} messages={schoolMessages}/>}
-      {selectedTab == "Support Team" && 'coming soon'}
+        
+      {selectedTab == "School" && <ChatBox user={user} onMessage={handleSchoolMessage} messages={schoolMessages} smaller={5}/>}
+
+      {selectedTab == "Support Team" && <ChatBox user={user} onMessage={handleAdminMessage} messages={adminMessages} smaller={5}/>}
 
       {/* Popup Overlay */}
         {isMentorOpen && (

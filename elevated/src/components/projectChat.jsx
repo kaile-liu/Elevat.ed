@@ -5,6 +5,7 @@ import * as fetchData from "../utils/fetchData"
 import * as notifications from "../utils/notifications"
 // import { useRealtimeChat } from '../integrations/supabase/use-realtime-chat'
 import ChatMessage from './chatMessage';
+import LoadingOverlay from './ui/loadingOverlay';
 
 const ProjectChat = ( { project, user, onMessage, messages, members }) => {
 
@@ -125,11 +126,13 @@ const ProjectChat = ( { project, user, onMessage, messages, members }) => {
 
   return (
     <div className="flex flex-col max-h-[75vh] h-full w-full bg-white p-4 rounded-xl shadow relative">
+     <LoadingOverlay full={false}/>
      {/* Messages */}
      <h3 className="font-semibold text-center mb-2">Team chat</h3>
      <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-4">
        {messages.length === 0 ? (
-         <div className="text-center text-sm text-muted-foreground">
+         <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+          <img className='w-8 h-8' src='/chat.png'/>
            No messages yet. Start the conversation!
          </div>
        ) : null}

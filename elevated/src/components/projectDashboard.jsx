@@ -80,10 +80,10 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
   });
 
   const [userMessaged, setUserMessaged ] = useState(user.get_started_tasks_complete?.includes(2))
-  console.log('user message: ', userMessaged)
   // send message to Slack Channel via the '/slack/send-message' endpoint
   const handleMessage = async (messageText, attachments, profile_id) => {
-    if (!userMessaged) {
+    if (user?.role == 'Student'){
+     if (!userMessaged) {
         await fetchData.update(
           "Users",
           { get_started_tasks_complete: [...(user.get_started_tasks_complete || []), 2] },
@@ -92,7 +92,8 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
         );
         setUserMessaged(true)
         rewards.reward(user, rewards.getStartedTasks.find(task => task.id === 2).reward)
-      }
+      } 
+    }
     
     try {
       const response = await fetch('https://elevat-ed.onrender.com/slack/send-message', {
@@ -153,6 +154,7 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
 
       // fetch MESSAGES
       try {
+        console.log(project.project_id, user)
         const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=project-group-${project.project_id}`);
         if (!response.ok) {
           throw new Error(`Error fetching messages: ${response.statusText}`);
@@ -395,7 +397,15 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
                             <TaskCard task={task} isDragging={false} draggable={columnId == "done" ? false : !viewOnly} onDelete={async () => {
                               console.log('delete')
                               // NOTE need to first remove all records related to this record by task_id
+                              // i.e. task assignees
+                              await fetchData.remove('Project_task_assignees', 'task_id', task.task_id)
+                              // then delete the record
                               await fetchData.remove('Project_tasks', 'task_id', task.task_id)
+                              // then remove task from local state
+                              setColumns(prev => ({
+                                ...prev,
+                                [columnId]: prev[columnId].filter(t => t.task_id !== task.task_id)
+                              }));
                             }}/>
                           </div>
                     ))}
@@ -417,7 +427,7 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
                 </div>
                 {/* Avatars */}
                 <div className="flex space-x-1">
-                  {teamMembers.filter(member => member.profile.profile_id != user.profile_id).map((member, idx) => (
+                  {teamMembers.filter(member => member.profile.profile_id != user.profile_id && member.profile.role == 'Student').map((member, idx) => (
                     <div key={member.profile.profile_id} className='relative group' onClick={() => {
                         setSelectedProfileTab(member)
                         setIsProfileTabOpen(true)

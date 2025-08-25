@@ -3,13 +3,16 @@ import * as fetchData from "../utils/fetchData"
 
 const ChatMessage = ({ message, senderProfileId, messageText, isOwnMessage, showHeader, widthFull }) => {
   const [senderName, setSenderName] = useState('')
+  const [senderRole, setSenderRole] = useState('Student')
   const [senderPfp, setSenderPfp] = useState('/profile.png')
 
   useEffect(() => {
     const fetchSender = async () => {
-      const data = await fetchData.selectSingle("Users", "name, pfp", "profile_id", senderProfileId)
+      const data = await fetchData.selectSingle("Users", "*", "profile_id", senderProfileId)
       setSenderName(data.name)
+      setSenderRole(data.role)
       setSenderPfp(data.pfp)
+      console.log(data.role)
     }
     fetchSender()
   }, [])
@@ -55,7 +58,7 @@ const ChatMessage = ({ message, senderProfileId, messageText, isOwnMessage, show
       <div className={`${widthFull ? '' : 'max-w-[28ch]'} w-fit flex flex-col`}>
         {showHeader && (
           <div className="flex flex-col items-start text-xs px-3 mb-1">
-            <span className="font-medium">{senderName || 'User name'}</span>
+            <span className="font-medium flex items-center gap-2">{senderName || 'User name'} <div className={`rounded-full px-1  ${senderRole == 'Mentor' ? 'bg-green-full' : senderRole == 'Admin' ? 'bg-blue-full' : ''} text-white ${senderRole === 'Student' ? 'hidden' : ''}`}>{senderRole}</div></span>
             <span className="text-gray-600 text-xs">{formatTimestamp(message.ts)}</span>
           </div>
         )}
@@ -74,17 +77,18 @@ const ChatMessage = ({ message, senderProfileId, messageText, isOwnMessage, show
         </div>
         {attachments != [] && (
           <div className="flex flex-wrap gap-2 px-3 mt-1">
-            {attachments.filter(attachment => attachment != '').map((link, i) => (
-              <a
+            {attachments.filter(attachment => attachment != '').map((link, i) => {
+              const cleanLink = link.replace(/^<|>$/g, "")
+              return <a
                 key={i}
-                href={link}
+                href={cleanLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${widthFull ? '' : 'max-w-[24ch]'} text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:underline`}
               >
-                {link.length > 24 ? link.slice(0, 24) + '…' : link}
+                {cleanLink.length > 24 ? cleanLink.slice(0, 24) + '…' : cleanLink}
               </a>
-            ))}
+            })}
           </div>
         )}
       </div>
