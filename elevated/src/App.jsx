@@ -9,6 +9,9 @@ import CasAdvisorDashboard from "./pages/CasAdvisorDashboard";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import { TourProvider, useTour } from '@reactour/tour'
+import { ForgottenPassword } from "@supabase/auth-ui-react";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Define tour steps here
 const steps = [
@@ -174,6 +177,9 @@ function App() {
               
               <Route path="/" element={<Home />} />
               {/* <Navigate to="/login" replace /> */}
+              <Route path='/forgot-password' element={<ForgotPassword />}/>
+              
+              <Route path='/reset-password' element={<ResetPassword />}/>
             </Routes>
           </BrowserRouter>
 

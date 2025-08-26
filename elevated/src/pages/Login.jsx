@@ -161,6 +161,8 @@ const Login = () => {
               },
             }}
           />
+          
+        <a href='/forgot-password' className="text-sm w-full text-center !text-green-med-dark font-normal underline">Forgot your password?</a>
         </div>
 
         {/* Right: Background Image */}

@@ -70,3 +70,7 @@ h1, h2, h3 {
 a.supabase-auth-ui_ui-anchor[href="#auth-sign-up"] {
   display: none !important;
 }
+
+a.supabase-auth-ui_ui-anchor[href="#auth-forgot-password"] {
+  display: none !important;
+}
