@@ -22,7 +22,7 @@ const Sidebar = ({ selected, setSelected, buffer=false }) => {
         { id: "trackr", label: "Trackr", icon: <Bookmark size={16} /> },
         { id: "chat", label: "Chat", icon: <Users size={16} /> },
         { id: "leaderboard", label: "Leaderboard", icon: <AlignEndHorizontal size={16} /> },
-        { id: "settings", label: "Settings", icon: <Settings size={16} /> },
+        //{ id: "settings", label: "Settings", icon: <Settings size={16} /> },
     ];
 
     async function signOut() {
@@ -33,7 +33,7 @@ const Sidebar = ({ selected, setSelected, buffer=false }) => {
     }
 
     return (
-        <div id='sidebar-nav' className={`w-48 bg-white h-[92vh] flex flex-col items-spread gap-4 sticky top-0 border-r-2 border-green-med-dark/25`}>
+        <div id='sidebar-nav' className={`w-48 mt-14 bg-white h-[92vh] flex flex-col items-spread gap-4 fixed top-0 border-r-2 border-green-med-dark/25`}>
             
 
             <nav className="flex flex-col">

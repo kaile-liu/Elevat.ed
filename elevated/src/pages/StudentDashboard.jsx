@@ -90,12 +90,13 @@ const StudentDashboard = () => {
     <div className='flex flex-col w-screen h-screen overflow-x-hidden'>
       <LoadingOverlay />
 
-      <div className='h-12 w-full'>
+      <div className='h-14 w-full sticky top-0 z-99'>
         <HeaderBar setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
       </div>
       
       <div className="grow flex w-full h-full relative">
         <Sidebar selected={selected} setSelected={setSelected}/>
+        <div className="w-48 shrink-0"></div>
         
         {/** darken bg + profile sidebar slide out */}
         <div className={`bg-black/15 absolute z-1 w-full h-full ${isProfileBarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-all`}></div>
