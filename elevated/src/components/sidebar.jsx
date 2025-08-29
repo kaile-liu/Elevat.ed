@@ -47,7 +47,7 @@ const Sidebar = ({ selected, setSelected, buffer=false }) => {
                 onClick={() => {
                     if (currentStep === navSteps[item.id]) setCurrentStep(currentStep + 1);
                     setSelected(item.id)
-                    if (item.id == 'learn') window.open("https://example.com", "_self") 
+                    //if (item.id == 'learn') window.open("https://example.com", "_self") 
                 }}>
                     {item.icon}
                     <p className="text-sm">{item.label}</p>

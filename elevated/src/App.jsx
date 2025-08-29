@@ -175,7 +175,7 @@ function App() {
                 }
               />
               
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
               {/* <Navigate to="/login" replace /> */}
               <Route path='/forgot-password' element={<ForgotPassword />}/>
               

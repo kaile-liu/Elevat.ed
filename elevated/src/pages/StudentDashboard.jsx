@@ -14,6 +14,7 @@ import Leaderboard from '../components/screens/leaderboard.jsx';
 import Settings from '../components/screens/settings.jsx';
 import LoadingOverlay from '../components/ui/loadingOverlay.jsx';
 import { TourProvider, useTour } from '@reactour/tour'
+import Learn from '../components/screens/learn.jsx';
 
 const StudentDashboard = () => {
   const { setIsOpen } = useTour()
@@ -72,7 +73,7 @@ const StudentDashboard = () => {
       case 'home':
         return <Home user={userData}/>;
       case 'learn':
-        return <div>learn View</div>;
+        return <Learn />;
       case 'project':
         return <Project user={userData}/>;
       case 'trackr':

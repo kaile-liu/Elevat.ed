@@ -29,6 +29,10 @@ const CreateTaskPopup = ({ onClose, teamMembers, project, setColumns, openSnackb
   
     const handleSubmit = async (e) => {
       e.preventDefault();
+      if (assignees.length === 0) {
+        alert("Please assign at least one person to this task.");
+        return; // Stop form submission
+      }
       openSnackbar()
       const newTask = { title, description, priority, assignees, dueDate };
       console.log('New Task:', newTask);

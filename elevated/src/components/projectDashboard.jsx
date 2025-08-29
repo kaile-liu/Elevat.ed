@@ -14,6 +14,9 @@ import ProfilePopUp from './profilePopUp';
 import TaskDetailsPopup from './taskDetailsPopup';
 import ConfirmationSnackbar from './ui/ConfirmationSnackbar';
 import Tooltip from '@mui/material/Tooltip';
+import Lottie from "lottie-react";
+import successAnimation from "../assets/Success.json"; // path to your file
+import Popup from './ui/popup';
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
@@ -61,6 +64,7 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
   const [selectedProfileTab, setSelectedProfileTab] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
+  const [taskCompletePopup, setTaskCompletePopup] = useState(false);
 
   // snackbar states
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -219,6 +223,38 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
         } catch (error) {
           console.error("Failed to update task status in Supabase:", error);
         }
+        // reward if task complete
+        if (destinationCol == 'done') {
+          // show reward popup with lottie
+          setTaskCompletePopup(true)
+          // reward each assignee
+          try {
+            // 1. Fetch task assignees
+            const assignees = await fetchData.select("Project_task_assignees", "*", "task_id", taskToUpdate.task_id);
+            for (const assignee of assignees) {
+              // 2. Get corresponding Project Member
+              const member = await fetchData.selectSingle(
+                "Project_members",
+                "*",
+                "project_member_id",
+                assignee.project_member_id
+              );
+              // 3. Get User by profile_id
+              const user = await fetchData.selectSingle(
+                "Users",
+                "*",
+                "profile_id",
+                member.profile_id
+              );
+              // 4. Increment points by 50
+              const updatedPoints = user.points + 50
+              await fetchData.update("Users", { points: updatedPoints }, "profile_id", user.profile_id);
+            }
+            console.log(`Rewarded assignees of task ${taskToUpdate.task_id}`);
+          } catch (error) {
+            console.error("Error rewarding task assignees:", error);
+          }
+        }
       }
       updateStatus()
     }
@@ -361,7 +397,7 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
               { !viewOnly &&
               <button className="bg-green-full text-white text-sm px-4 py-1 rounded-full hover:bg-green-full/75" onClick={() => setOpenPopup(true)}>Create Task +</button>
               }
-              </div>
+            </div>
 
             <div className="grid md:grid-cols-3 md:grid-rows-1 gap-4 flex-1 max-h-full">
               {['todo', 'inprogress', 'done'].map((columnId) => {
@@ -414,6 +450,20 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
               })}
             </div>
           </div>
+
+          {/* task complete lottie popup */}
+          {taskCompletePopup && <Popup setIsOpen={setTaskCompletePopup} fit={true}>
+            <div className='w-40 h-40 mx-auto mt-[-24px]'>
+            <Lottie 
+              animationData={successAnimation} 
+              loop={false}       // plays continuously
+              autoplay={true}   // starts automatically
+            /></div>
+            <div className='text-center mt-[-40px]'>
+            <h3 className='font-medium text-lg'>Completed!</h3>
+            <span className='text-sm text-green-dark/90'>Great work, all task assignees earned<br/>50<img src='/points.png' className='w-6 h-6 object-cover inline'/> for finishing another task.</span>
+            </div>
+          </Popup>}
         </div>
 
         {/* Right Section: Team overview + Chat */}

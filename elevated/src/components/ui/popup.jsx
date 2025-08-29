@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 
-const Popup = ({ setIsOpen, children }) => {
+const Popup = ({ setIsOpen, fit=false, children }) => {
   const popupRef = useRef();
   const bgRef = useRef();
 
@@ -39,7 +39,7 @@ const Popup = ({ setIsOpen, children }) => {
     >
       <div
         ref={popupRef}
-        className="bg-white rounded-xl shadow-xl max-w-lg w-full px-8 py-6 space-y-4 relative"
+        className={`bg-white rounded-xl shadow-xl ${fit ? 'w-fit' : 'max-w-lg w-full' } p-8 space-y-4 relative`}
       >
         <button
           onClick={handleClose}
