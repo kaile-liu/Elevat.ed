@@ -1,8 +1,9 @@
 import React from 'react'
 
-const BentoBoxSmall = ({upperText, lowerTextStat, lowerTextSub, leftIcon, rightIcon, hasGradient=false, classList}) => {
+const BentoBoxSmall = ({upperText, lowerTextStat, lowerTextSub, leftIcon, rightIcon, hasGradient=false, classList, onClick, children}) => {
   return (
-    <div className={`col-span-3 flex items-center justify-evenly rounded-2xl p-4 h-auto gap-1 ${hasGradient ? 'bg-gradient-to-br from-green-med to-green-full text-white' : 'bg-green-light'} ${classList}`}>
+    <div className={`col-span-3 flex items-center justify-evenly rounded-2xl p-4 h-auto gap-1 ${hasGradient ? 'bg-gradient-to-br from-green-med to-green-full text-white' : 'bg-green-light'} ${classList}`}
+    onClick={onClick}>
       
       {leftIcon && <img className='w-12' src={leftIcon} alt={upperText}></img>}
 
@@ -12,6 +13,8 @@ const BentoBoxSmall = ({upperText, lowerTextStat, lowerTextSub, leftIcon, rightI
       </div>
       
       {rightIcon && <img className='w-12' src={rightIcon} alt={upperText}></img>}
+
+      {children}
 
     </div>
   )

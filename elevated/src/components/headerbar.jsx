@@ -37,6 +37,7 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
   const progress = (completed.filter(Boolean).length / tasks.length) * 100;
 
   useEffect(() => {
+    console.log(user.profile_id)
     const fetchNotifications = async () => {
       const notifications = await fetchData.select("Notifications", '*', 'profile_id', user.profile_id)
       const sortedNotifications = notifications.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -60,6 +61,7 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
       setSupportTickets(sorted)
+      console.log(tickets, enrichedTickets, sorted)
     }
     fetchSupportTickets()
   }, [])

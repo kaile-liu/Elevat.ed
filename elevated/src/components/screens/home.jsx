@@ -11,39 +11,9 @@ import LoadingOverlay from '../ui/loadingOverlay'
 import Popup from '../ui/popup'
 import * as rewards from "../../utils/rewards"
 import { useTour } from '@reactour/tour'
-
-// const Event = ({event, date, start, end}) => {
-//     return (
-//       <div className='flex flex-col items-start border-l-4 border-green-full px-4 mb-4'>
-//           <h1 className='font-medium text-lg'>{event}</h1>
-//           <p className='text-sm text-green-med-dark'>{date}  {start} - {end}</p>
-//       </div>
-//     )
-//   }
-
-// const Task = ({task, deadline}) => {
-//     return (
-//         <div className='flex justify-start items-center gap-4 mb-4'>
-//             <div className='w-4 h-4 border-2 border-green-full'></div>
-//             <div>
-//                 <h1 className='font-medium text-lg'>{task}</h1>
-//                 <p className='text-sm text-green-med-dark'>{deadline}</p>
-//             </div>
-//         </div>
-//     )
-// }
-
-// const Message = ({message, date, username, userpfp}) => {
-//     return (
-//         <div className='flex justify-start items-center gap-4 mb-4'>
-//             <img className='w-8 h-8' src={userpfp}></img>
-//             <div>
-//                 <h1 className='font-medium text-sm'>{username} <span className='font-normal text-green-med-dark'>{date}</span></h1>
-//                 <p className='text-sm text-green-med-dark max-w-full line-clamp-1'>{message}</p>
-//             </div>
-//         </div>
-//     )
-// }
+import Tooltip from '@mui/material/Tooltip';
+import { supabase } from "../../integrations/supabase/client"; // Supabase client
+import ProjectTimeline from '../projectTimeline'
 
 const Home = ( { user } ) => {
     const [getStartedTasksPopup, setGetStartedTasksPopup] = useState(false)
@@ -60,6 +30,15 @@ const Home = ( { user } ) => {
     const [usersToDisplay, setUsersToDisplay] = useState([])
     const userRef = useRef(null);
     const [columns, setColumns] = useState({ todo: [], inprogress: [] });
+    const [tasksDoneByUser, setTasksDoneByUser] = useState(0);
+
+    const [lastUserEndorsed, setLastUserEndorsed] = useState(null);
+    const [announcements, setAnnouncements] = useState([])
+    const [selectedAnnounement, setSelectedAnnouncement] = useState(null);
+    const [announcementPopup, setAnnouncementPopup] = useState(false);
+
+    const [projectCyclePopup, setProjectCyclePopup] = useState(false);
+    const [projectDates, setProjectDates] = useState(null);
 
     const [mentorMessages, setMentorMessages] = useState([])
     const mentorChatContainerRef = React.useRef(null);
@@ -110,7 +89,6 @@ const Home = ( { user } ) => {
         const assignedTasks = await fetchData.select("Project_task_assignees", "*", "project_member_id", projectMember.project_member_id)
         const assignedTasksIds = assignedTasks.map(task => task.task_id);
         const filteredTasks = projectTasksData.filter(task => assignedTasksIds.includes(task.task_id))
-        
         // Create a copy of the empty columns on component mount
         const updatedColumns = {
         todo: [],
@@ -125,6 +103,31 @@ const Home = ( { user } ) => {
         // update state once
         console.log(updatedColumns)
         setColumns(updatedColumns);
+        // count the completed tasks by the user
+        const completedTasks = filteredTasks.filter(task => task.status == 'done')
+        let completedCount = 0;
+        for (const task of completedTasks) {
+            try {
+            // 1. Fetch all task assignees for this task
+            const assignees = await fetchData.select("Project_task_assignees", "*",   "task_id",task.task_id);
+            if (!assignees.length) continue;
+            // 2. For each assignee, get their profile_id
+            for (const assignee of assignees) {
+                const member = await fetchData.selectSingle("Project_members",  "*",  "project_member_id",assignee.project_member_id);
+                if (member?.profile_id === user.profile_id) {
+                completedCount++;
+                break; // no need to check other assignees for this task
+                }
+            }
+            } catch (error) {
+            console.error(`Error checking task ${task.task_id}:`, error);
+            }
+        }
+        setTasksDoneByUser(completedCount)
+
+        //fetch PROJ START DATE
+        const project = await fetchData.selectSingle("Projects", "*", "project_id", projectMember.project_id)
+        setProjectDates(project.project_dates)
 
         // fetch MESSAGES
         try {
@@ -150,10 +153,63 @@ const Home = ( { user } ) => {
         console.error('Failed to fetch Slack messages:', err);
         }
 
+        // fetch ANNOUNCEMENTS
+        //const announcements = await fetchData.select('Announcements', '*', schools, user.school)
+        const allAnnouncements = await fetchData.selectNoQuery('Announcements', '*')
+        const announcements = allAnnouncements.filter(a => a.schools.includes(user.school))
+        console.log(announcements)
+        setAnnouncements(announcements)
+
         if ([1, 2, 3, 4].some(id => !user.get_started_tasks_complete?.includes(id))) setGetStartedTasksPopup(true)
     }
     fetchUserData()
     }, [])
+
+    
+    // fetch LAST ENDORSED
+    useEffect(() => {
+        const runCheck = async () => {
+            try {
+            const lastEndorsed = await fetchData.selectSingle('Users','*','profile_id',user.last_endorsed);
+            console.log(lastEndorsed)
+            if (!lastEndorsed) {
+                setLastUserEndorsed(null);
+                return;
+            }
+            const endorsementDate = new Date(user.last_endorsement_given);
+            const now = new Date();
+            // Get start of current week in UTC (Monday 00:00:00)
+            const startOfWeek = new Date(Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate() - ((now.getUTCDay() + 6) % 7), // shift so Monday is start
+                0, 0, 0, 0
+            ));
+
+            // Get end of current week in UTC (Sunday 23:59:59)
+            const endOfWeek = new Date(Date.UTC(
+                startOfWeek.getUTCFullYear(),
+                startOfWeek.getUTCMonth(),
+                startOfWeek.getUTCDate() + 6,
+                23, 59, 59, 999
+            ));
+            // Compare dates
+            console.log('cmparing', startOfWeek, endOfWeek, endorsementDate)
+            if (endorsementDate >= startOfWeek && endorsementDate <= endOfWeek) {
+                setLastUserEndorsed(lastEndorsed);
+            } else {
+                console.log('here')
+                setLastUserEndorsed(null);
+            }
+            } catch (error) {
+            console.error('Error checking last endorsed user:', error);
+            setLastUserEndorsed(null);
+            }
+        };
+
+        runCheck()
+        }, [user]);
+
 
     useEffect(() => {    
         // Find the index of the current user
@@ -192,9 +248,40 @@ const Home = ( { user } ) => {
         window.open("https://example.com", "_self")
     }
 
+    const formatTimestamp = (ts) => {
+        // ts is something like "2025-08-17 09:21:49.826283+00"
+        const date = new Date(ts); // no parseFloat!
+        const now = new Date();
+
+        // Check if today (local time)
+        const isToday = date.toDateString() === now.toDateString();
+
+        // Check if yesterday
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        const isYesterday = date.toDateString() === yesterday.toDateString();
+
+        const timeStr = date.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+
+        if (isToday) return `Today ${timeStr}`;
+        if (isYesterday) return `Yesterday ${timeStr}`;
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthAbbr = monthNames[date.getMonth()];
+
+        return `${monthAbbr} ${day} ${timeStr}`;
+    };
+
+
   return (
     <div className='flex gap-4 min-h-screen p-6 relative'>
-        <LoadingOverlay full={false}/>
+        <LoadingOverlay full={false} time={2}/>
         <div className="flex flex-col text-green-dark">
             <p className='text-sm font-medium text-green-med-dark'>Hi {user.name}</p>
             <h1 className="text-2xl font-semibold mb-6">Welcome back,</h1>
@@ -202,10 +289,19 @@ const Home = ( { user } ) => {
             {/* Bento grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
 
-                <BentoBoxSmall upperText={"Login Streak"} lowerTextStat={"7"} lowerTextSub={"days"} rightIcon={'/clock.png'}/>
-                <BentoBoxSmall upperText={"Tasks Completed"} lowerTextStat={"4"} lowerTextSub={"by you"} leftIcon={'/bar_chart.png'}/>
+                <BentoBoxSmall classList={'hover:cursor-pointer'} upperText={"Project Cycle"} lowerTextStat={"10%"} lowerTextSub={"complete"} rightIcon={'/graph_curve.png'} hasGradient={true} onClick={() => setProjectCyclePopup(true)}/>
+                <BentoBoxSmall upperText={"Tasks Completed"} lowerTextStat={tasksDoneByUser} lowerTextSub={"by you"} leftIcon={'/bar_chart.png'}/>
                 <BentoBoxSmall upperText={"Tasks"} lowerTextStat={columns.todo.length + columns.inprogress.length} lowerTextSub={'to do'} leftIcon={'/opportunities.png'}/>
-                <BentoBoxSmall upperText={"Project Cycle"} lowerTextStat={"10%"} lowerTextSub={"complete"} rightIcon={'/graph_curve.png'} hasGradient={true}/>
+                <BentoBoxSmall classList={'relative'} upperText={"You endorsed"} lowerTextSub={<span><strong>{lastUserEndorsed ? lastUserEndorsed.name.split(" ")[0] : 'No one'}</strong> this week</span>} rightIcon={lastUserEndorsed ? lastUserEndorsed.pfp ? lastUserEndorsed.pfp : '/profile.png' : '/empty-profile.png'}>
+                    {!lastUserEndorsed && <Tooltip title="Make sure to use your weekly endorsement before it resets!" className='absolute right-[-8px] top-[-8px]'
+                    slotProps={{
+                        tooltip: {
+                        sx: { maxWidth: 160, width: 160 }, 
+                        },
+                    }}>
+                        <div className='bg-green-full/80 rounded-full p-2 hover:bg-green-full'><img src='/exclamation.png' className='w-3 h-3 invert'/></div>
+                    </Tooltip>}
+                </BentoBoxSmall>
         
                 {/* Project deets */}
                 <div className='col-span-8 flex justify-evenly gap-8 items-center bg-green-light rounded-2xl p-8 h-auto'>
@@ -391,10 +487,22 @@ const Home = ( { user } ) => {
                     </div>
                 </div>
         
-                {/* New Messages */}
+                {/* Announcements */}
                 <div className="col-span-4 bg-green-light rounded-2xl p-8 h-auto">
-                      <h1 className='text-xl font-semibold mb-4'>Opportunity Tracker</h1>
-                        <div className='flex items-center gap-4'> 
+                      <h1 className='text-xl font-semibold mb-4'>Announcements</h1>
+                      <div className='w-full h-full space-y-2 max-h-[140px] overflow-y-auto'>
+                        {announcements.map(announcement => (
+                            <div className='px-4 py-2 bg-white relative rounded-md hover:cursor-pointer' onClick={() => {
+                                setSelectedAnnouncement(announcement)
+                                setAnnouncementPopup(true)
+                            }}>
+                                <p className='text-xs font-normal !text-green-med-dark'>{formatTimestamp(announcement.created_at)}</p>
+                                <h3 className='font-medium text-sm'>{announcement.title}</h3>
+                                <p className='text-xs line-clamp-2'>{announcement.text}</p>
+                            </div>
+                        ))}
+                      </div>
+                        {/* <div className='flex items-center gap-4'> 
                             <div>
                                 <p className='text-sm'>Discover valuable opportunities curated by our team to elevate your career.</p>
                                 <button className="mt-4 bg-green-full text-sm text-white py-2 px-4 rounded-full hover:cursor-pointer" onClick={() => {
@@ -407,12 +515,21 @@ const Home = ( { user } ) => {
                                 }}>Explore</button>
                             </div>
                             <img src='/trackr_screenshot.png' className='w-[50%]'></img>
-                        </div>
-                        
+                        </div> */}
                     </div>
-
             </div>
         </div>
+
+        {projectCyclePopup && <Popup fit={true} setIsOpen={setProjectCyclePopup}>
+            <h3 className='font-semibold text-lg text-center w-full'>Project Timeline</h3>
+            <ProjectTimeline projectDates={projectDates}/>
+            </Popup>}
+
+        {selectedAnnounement && announcementPopup && <Popup setIsOpen={setAnnouncementPopup}>
+            <p className='text-sm font-normal !text-green-med-dark'>{formatTimestamp(selectedAnnounement.created_at)}</p>
+            <h3 className='font-medium text-md'>{selectedAnnounement.title}</h3>
+            <p className='text-sm'>{selectedAnnounement.text}</p>
+            </Popup>}
 
         {getStartedTasksPopup && <Popup setIsOpen={setGetStartedTasksPopup}>
             <h2 className="font-semibold text-lg pb-4 w-full border-b-2 border-green-med-dark/25">Getting Started</h2>

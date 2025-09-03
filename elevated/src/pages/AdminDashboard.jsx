@@ -259,7 +259,7 @@ const AdminDashboard = () => {
                         }))
                       )
                       .filter((member) =>
-                        member.name.toLowerCase().includes(studentSearch.toLowerCase())
+                        member.name.toLowerCase().includes(studentSearch.toLowerCase()) && member.role == 'Student'
                       )
                       .map((member) => (
                         <div

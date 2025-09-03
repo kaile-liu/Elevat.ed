@@ -71,19 +71,19 @@ const StudentDashboard = () => {
   const renderView = () => {
     switch (selected) {
       case 'home':
-        return <Home user={userData}/>;
+        return <Home key='home-page' user={userData}/>;
       case 'learn':
-        return <Learn />;
+        return <Learn key='learn-page'/>;
       case 'project':
-        return <Project user={userData}/>;
+        return <Project key='project-page' user={userData}/>;
       case 'trackr':
-        return <Opportunities />;
+        return <Opportunities key='opportunities-page' />;
       case 'chat':
-        return <Chat user={userData}/>;
+        return <Chat key='chat-page' user={userData}/>;
       case 'leaderboard':
-        return <Leaderboard />;
+        return <Leaderboard key='leaderboard-page' />;
       case 'settings':
-        return <Settings user={userData}/>;
+        return <Settings key='settings-page' user={userData}/>;
     }
   }
 
@@ -100,7 +100,7 @@ const StudentDashboard = () => {
         <div className="w-48 shrink-0"></div>
         
         {/** darken bg + profile sidebar slide out */}
-        <div className={`bg-black/15 absolute z-1 w-full h-full ${isProfileBarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-all`}></div>
+        <div className={`bg-black/15 fixed z-1 w-full h-full ${isProfileBarOpen ? 'opacity-100' : 'opacity-0 hidden'} transition-all`}></div>
         <ProfileSidebar isOpen={isProfileBarOpen} setIsProfileBarOpen={setIsProfileBarOpen} user={userData}/>
 
         <div className='relative w-full h-full bg-green-light/20'>

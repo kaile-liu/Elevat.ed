@@ -7,6 +7,7 @@ import * as notifications from "../utils/notifications"
 const AnnouncementPopup = ({ schools }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
+  const [announcementTitle, setAnnouncementTitle] = useState("");
   const [announcementText, setAnnouncementText] = useState("");
   const [schoolSearch, setSchoolSearch] = useState("");
   const [selectedSchools, setSelectedSchools] = useState([]);
@@ -34,7 +35,7 @@ const AnnouncementPopup = ({ schools }) => {
   const handleSend = async () => {
     // insert into announcements table + send all students in the school(s) a notification
     // code here ...
-    await fetchData.insert('Announcements', {text: announcementText, schools: selectedSchools})
+    await fetchData.insert('Announcements', {title: announcementTitle, text: announcementText, schools: selectedSchools})
     try {
         for (const school of selectedSchools) {
             const projects = schools[school]; // object: project_id → { project, members }
@@ -87,6 +88,12 @@ const AnnouncementPopup = ({ schools }) => {
             {step === 1 && (
               <>
                 <h2 className="text-xl font-semibold mb-4">New Announcement</h2>
+                <input 
+                  value={announcementTitle}
+                  onChange={(e) => setAnnouncementTitle(e.target.value)}
+                  placeholder="E.g. Welcome to ElevatEd!"
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none mb-4"
+                />
                 <textarea
                   value={announcementText}
                   onChange={(e) => setAnnouncementText(e.target.value)}

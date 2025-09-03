@@ -8,6 +8,9 @@ import { Pen, Pencil } from "lucide-react";
 import ConfirmationSnackbar from './ui/ConfirmationSnackbar';
 import * as notifications from "../utils/notifications"
 import { useTour } from '@reactour/tour'
+import endorsedAnimation from "../assets/Trophy.json";
+import Popup from './ui/popup';
+import Lottie from "lottie-react";
 
 const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
   const { setCurrentStep, currentStep } = useTour();
@@ -25,6 +28,7 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isError, setIsError] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [endorsedPopup, setEndorsedPopup] = useState(false);
 
 
   useEffect(() => {
@@ -102,17 +106,23 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
 
   const endorse = async (member) => {
     setEndorsementUsed(true)
+    setEndorsedPopup(true)
     setIsError(false)
     const userToEndorse = await fetchData.selectSingle('Users', '*', 'profile_id', member.profile.profile_id)
     try {
       await fetchData.update('Users', 
         {
           'endorsements': userToEndorse.endorsements+1,
-          'points': userToEndorse.points+100
+          'points': userToEndorse.points+100,
         }, 
         'profile_id', member.profile.profile_id
       )
-      await fetchData.update('Users', { 'last_endorsement_given': new Date }, 'profile_id', user.profile_id)
+      await fetchData.update('Users', 
+        { 
+          'last_endorsement_given': new Date,
+          last_endorsed: userToEndorse.profile_id
+        }, 
+        'profile_id', user.profile_id)
       // create a notification for the endorsed user
       notifications.createNotification(member.profile.profile_id, `${user.name} endorsed you`, 'Congrats! You have received +100 points.', '/endorsements.png', 'leaderboard-page-btn')
       setSnackbarMessage(`You endorsed ${member.profile.name}! (Please wait until next week to endorse another team member)`);
@@ -131,14 +141,14 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
   };
 
   return (
-    <div ref={profileSidebarRef} id='profile-sidebar'  className='w-80 absolute z-2 right-0 flex flex-col justify-start items-center gap-6 h-full p-8 pt-10 bg-[#FDFFFB]'>
+    <div ref={profileSidebarRef} id='profile-sidebar'  className='w-80 fixed z-2 right-0 flex flex-col justify-start items-center gap-6 h-full p-8 pt-10 bg-[#FDFFFB]'>
       <img id='close-profile-sidebar-btn' src='/chevron-down.png' className='w-4 h-4 cursor-pointer absolute top-4 left-4 rotate-270' onClick={() => {
         if (currentStep === 4) setCurrentStep(currentStep + 1);
         setIsProfileBarOpen(open => !open)
       }}></img>
       <div>
         <img src={user.pfp ? user.pfp : '/profile.png'} className="w-24 h-24 mx-auto rounded-full relative z-1"></img>
-        <div className='flex -mt-4 relative z-3'>
+        <div className='flex justify-center -mt-4 relative z-3'>
           {
             badges.map((badge, i) => <img src={badge.icon} className={`w-10 h-10 ${i > 0 ? '-ml-3' : ''}`}></img>)
           }
@@ -167,7 +177,7 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
         <div className='flex flex-col w-full items-center gap-4 p-2 border-2 border-green-med-dark/15 rounded-lg'>
           <div className='relative flex items-center'>
             <h3 className='font-normal text-green-dark'>Your Team</h3>
-            <Tooltip title="You can endorse one team member each week (resets every Monday)" className='absolute right-[-24px]'
+            <Tooltip title="Endorse a teammate to recognise their contributions! You can send one endorsement each week, and it refreshes every Monday." className='absolute right-[-24px]'
             slotProps={{
               tooltip: {
                 sx: { maxWidth: 160, width: 160 }, 
@@ -176,7 +186,7 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
               <div className='bg-green-full/80 rounded-full p-1 hover:bg-green-full'><img src='/question-mark.png' className='w-3 h-3 invert'/></div>
             </Tooltip>
           </div>
-          {teamMembers.filter(member => member.profile.profile_id != user.profile_id).map(member => (
+          {teamMembers.filter(member => member.profile.profile_id != user.profile_id && member.profile.role == 'Student').map(member => (
             <div className='w-full flex justify-between items-center text-sm font-normal text-green-dark/85' key={member.profile.profile_id}>
               <div className='flex items-center gap-2'>
                 <img src={member.profile.pfp ? member.profile.pfp : '/profile.png'} className='w-10 h-10 object-cover rounded-full'></img>
@@ -248,6 +258,20 @@ const ProfileSidebar = ( { isOpen, setIsProfileBarOpen, user } ) => {
         message={snackbarMessage}
         error={isError}
       />
+
+      {/* task complete lottie popup */}
+      {endorsedPopup && <Popup setIsOpen={setEndorsedPopup} fit={true}>
+        <div className='w-40 h-40 mx-auto mt-[-24px]'>
+        <Lottie 
+          animationData={endorsedAnimation} 
+          loop={false}       // plays continuously
+          autoplay={true}   // starts automatically
+        /></div>
+        <div className='text-center mt-[-40px]'>
+        <h3 className='font-medium text-lg'>Endorsement Sent!</h3>
+        <span className='text-sm text-green-dark/90'>Your teammate will be notified and feel appreciated! You’ll be able to endorse someone new next Monday.</span>
+        </div>
+      </Popup>}
     </div>
   )
 }

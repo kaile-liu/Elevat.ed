@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const LoadingOverlay = ( { full=true } ) => {
+const LoadingOverlay = ( { full=true, time=0.4 } ) => {
   const [loading, setLoading] = useState(true);     // controls fade animation
   const [show, setShow] = useState(true);           // controls DOM presence
 
@@ -8,7 +8,7 @@ const LoadingOverlay = ( { full=true } ) => {
     // Simulate load finishing after 500ms
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 400);
+    }, time * 1000);
     return () => clearTimeout(timer);
   }, []);
 

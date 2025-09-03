@@ -11,6 +11,7 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
         // fetch USERS
         const userId = await fetchData.getUserId()
         const currentUser = await fetchData.selectSingle("Users", "*", "user_id", userId)
+        // leaderboard pos
         const allUsers = await fetchData.select("Users", "*", "school", currentUser.school, 'points', false)
         const allStudents = allUsers.filter(user => user.role == 'Student');
         for (let i = 0; i < allStudents.length; i++) {
@@ -19,9 +20,11 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
                 break;
             }
         }
+        
+        console.log('profile: ', profile)
         // fetch badges
         const fetchedBadges = await Promise.all(
-            user.badges.map(async (badgeId) => {
+            profile.profile.badges.map(async (badgeId) => {
             return await fetchData.selectSingle('Badges', '*', 'badge_id', badgeId);
             })
         );
@@ -35,7 +38,7 @@ const ProfilePopUp = ( { profile, setIsOpen } ) => {
         <div className='flex flex-col justify-start items-center gap-4 h-full'>
             <div>
                 <img src={profile.profile.pfp ? profile.profile.pfp : '/profile.png'} className="w-24 h-24 mx-auto object-cover rounded-full"></img>
-                <div className='flex -mt-4'>
+                <div className='flex justify-center -mt-4'>
                 {
                     badges.map((badge, i) => <img src={badge.icon} className={`w-10 h-10 ${i > 0 ? '-ml-3' : ''}`}></img>)
                 }

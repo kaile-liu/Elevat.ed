@@ -68,7 +68,7 @@ const Leaderboard = () => {
             <div className="flex items-end justify-center gap-20 mb-8">
             {[1, 0, 2].map((i) => (
               <div
-                key={topThree[i].name}
+                key={topThree[i].profile_id}
                 className={`flex flex-col items-center ${i === 0 ? "scale-115 pb-4" : ""}`}
               >
                 <div
@@ -95,7 +95,7 @@ const Leaderboard = () => {
           <div className="w-full max-w-2xl h-80 overflow-y-auto bg-green-light rounded-xl shadow p-4">
             {rest.map((user, index) => (
               <div
-                key={user.name}
+                key={user.profile_id}
                 ref={user.profile_id == currentUser.profile_id ? userRef : null}
                 className={`flex items-center justify-between px-4 py-2 rounded-lg mb-2 ${
                   user.profile_id == currentUser.profile_id ? "bg-green-full" : ""
@@ -104,9 +104,9 @@ const Leaderboard = () => {
                 <div className={`${user.profile_id == currentUser.profile_id  ? 'text-white/90 ': 'text-gray-600'} flex items-center gap-3`}>
                   <span className={` font-medium w-5 text-right`}>{index + 4}</span>
                   <div
-                    className="w-10 h-10 rounded-full overflow-hidden cursor-pointer"
+                    className="w-10 h-10 rounded-full overflow-hidden"
                   >
-                    <img src={user.pfp ? user.pfp : '/profile.png'} alt={user.name} className="w-full h-full object-cover" onClick={() => {
+                    <img src={user.pfp ? user.pfp : '/profile.png'} alt={user.name} className="w-full h-full object-cover hover:cursor-pointer" onClick={() => {
                       setSelectedProfile(user)
                       setIsProfileOpen(true)
                     }}/>
