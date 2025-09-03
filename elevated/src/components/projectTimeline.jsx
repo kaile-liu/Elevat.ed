@@ -18,7 +18,7 @@ const ProjectTimeline = ({ projectDates }) => {
   const projectEnd = new Date(project_end_date);
   const midTermStart = new Date(mid_term_presentation_start_date);
   const midTermEnd = new Date(mid_term_presentation_end_date);
-  const today = new Date("2025-09-15");
+  const today = new Date();
 
   // Position for today's vertical line
   const todayOffset = Math.max(
