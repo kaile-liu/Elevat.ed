@@ -67,7 +67,7 @@ const AnnouncementPopup = ({ schools }) => {
       {/* Floating button */}
       <button
         onClick={() => setIsModalOpen(true)}
-         className="fixed bottom-20 right-8 w-16 h-16 rounded-full bg-green-full hover:bg-green-full/90 flex items-center justify-center shadow-lg text-white 
+         className="fixed top-16 right-6 w-16 h-16 rounded-full bg-green-full hover:bg-green-full/90 flex items-center justify-center shadow-lg text-white 
              transition-transform duration-300 transform hover:scale-115 hover:rotate-8"
       >
         <Megaphone size={24} className="transition-transform duration-300" />

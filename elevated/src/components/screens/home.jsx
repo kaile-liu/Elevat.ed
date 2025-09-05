@@ -14,6 +14,7 @@ import { useTour } from '@reactour/tour'
 import Tooltip from '@mui/material/Tooltip';
 import { supabase } from "../../integrations/supabase/client"; // Supabase client
 import ProjectTimeline from '../projectTimeline'
+import { Calendar, Clock, AlignLeft } from "lucide-react"; // icon library
 
 const Home = ( { user } ) => {
     const [getStartedTasksPopup, setGetStartedTasksPopup] = useState(false)
@@ -33,9 +34,14 @@ const Home = ( { user } ) => {
     const [tasksDoneByUser, setTasksDoneByUser] = useState(0);
 
     const [lastUserEndorsed, setLastUserEndorsed] = useState(null);
+
     const [announcements, setAnnouncements] = useState([])
     const [selectedAnnounement, setSelectedAnnouncement] = useState(null);
     const [announcementPopup, setAnnouncementPopup] = useState(false);
+
+    const [upcomingEvents, setUpcomingEvents] = useState([])
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [eventPopup, setEventPopup] = useState(false);
 
     const [projectCyclePopup, setProjectCyclePopup] = useState(false);
     const [projectDates, setProjectDates] = useState(null);
@@ -159,6 +165,10 @@ const Home = ( { user } ) => {
         const announcements = allAnnouncements.filter(a => a.schools.includes(user.school))
         console.log(announcements)
         setAnnouncements(announcements)
+
+        // fetch EVENTS
+        const events = await fetchData.select('Upcoming_events', '*', 'project_id', project.project_id)
+        setUpcomingEvents(events)
 
         if ([1, 2, 3, 4].some(id => !user.get_started_tasks_complete?.includes(id))) setGetStartedTasksPopup(true)
     }
@@ -481,10 +491,38 @@ const Home = ( { user } ) => {
                 {/* Upcoming Events */}
                 <div className='col-span-4 bg-green-light rounded-2xl p-8 h-auto'>
                     <h1 className='text-xl font-semibold mb-4'>Upcoming Events</h1>
+                    {upcomingEvents.length == 0 ? 
                     <div className='w-full h-full flex flex-col items-center justify-center gap-2 text-sm mt-[-20px]'>
                         <img className='w-12' src={'/calendar.png'}/>
                         <p>No upcoming events</p>
                     </div>
+                    : <div className='w-full h-full flex flex-col gap-2 text-sm'>
+                        {upcomingEvents.map((event, idx) => (
+                        <div
+                            key={idx}
+                            className="flex items-center gap-3 p-4 bg-white rounded-xl hover:shadow-md hover:cursor-pointer transition"
+                            onClick={() => {
+                                setSelectedEvent(event)
+                                setEventPopup(true)
+                            }}
+                            >
+                            {/* Icon */}
+                            <div className="flex-shrink-0 p-2 bg-green-light rounded-lg">
+                                <Calendar className="text-green-full w-6 h-6" />
+                            </div>
+                            {/* Event Info */}
+                            <div className="flex flex-col">
+                                <span className="font-semibold text-gray-800 text-sm">
+                                {event.title}
+                                </span>
+                                <span className="text-gray-600 text-xs">
+                                {event.date} | {event.start_time} - {event.end_time}
+                                </span>
+                            </div>
+                        </div>
+                        ))}
+                    </div>
+                    }
                 </div>
         
                 {/* Announcements */}
@@ -591,6 +629,40 @@ const Home = ( { user } ) => {
             </div>
             </Popup>}
         
+        {eventPopup && <Popup setIsOpen={setEventPopup}>
+            <div className="relative p-6 bg-white rounded-2xl w-full mx-auto">
+
+                {/* Title */}
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-green-light rounded-xl">
+                    <Calendar className="w-6 h-6 text-green-full" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                    {selectedEvent.title}
+                    </h2>
+                </div>
+
+                {/* Date & Time */}
+                <div className="flex gap-4 mb-4">
+                    <div className="flex items-center gap-2 text-gray-700">
+                    <Calendar className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium">{selectedEvent.date}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-700">
+                    <Clock className="w-4 h-4 text-orange-500" />
+                    <span className="text-sm">
+                        {selectedEvent.start_time} – {selectedEvent.end_time}
+                    </span>
+                    </div>
+                </div>
+
+                {/* Description */}
+                <div className="flex items-start gap-2 text-gray-700">
+                    <AlignLeft className="w-4 h-4 mt-1 text-purple-500" />
+                    <p className="text-sm leading-relaxed">{selectedEvent.description}</p>
+                </div>
+                </div>
+        </Popup>}
     </div>
   )
 }

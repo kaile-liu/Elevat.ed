@@ -291,7 +291,7 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
         )}
         {/* Left Section */}
         <div className="flex-1 flex flex-col relative max-h-[90vh]">
-          {isLocked && <div className='absolute inset-0 backdrop-blur-sm bg-white/60 z-50 flex flex-col justify-center items-center'>
+          {project.is_locked && <div className='absolute inset-0 backdrop-blur-sm bg-white/60 z-50 flex flex-col justify-center items-center'>
             <h2>Locked 🔒</h2>
             <p className='text-sm max-w-[60ch] text-center'>You will be assigned your project brief once everyone has completed the 4-week training - then the fun begins!</p>
           </div>}

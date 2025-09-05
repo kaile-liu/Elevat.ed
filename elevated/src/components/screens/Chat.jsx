@@ -66,7 +66,7 @@ const Chat = ( { user } ) => {
         }
         // fetch SCHOOL MESSAGES
         try {
-          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=school-${user.school.toLowerCase().replace(" ", "-")}`);
+          const response = await fetch(`https://elevat-ed.onrender.com/slack/messages?channelName=school-${user.school.toLowerCase().replaceAll(" ", "-")}`);
           if (!response.ok) {
             throw new Error(`Error fetching messages: ${response.statusText}`);
           }
@@ -161,7 +161,7 @@ const Chat = ( { user } ) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          channel: `school-${user.school.toLowerCase().replace(" ", "-")}`,
+          channel: `school-${user.school.toLowerCase().replaceAll(" ", "-")}`,
           text: messageText,
           profile_id: profile_id
         }),

@@ -9,6 +9,7 @@ import ChatBox from '../components/chatBox';
 import ProjectDashboard from '../components/projectDashboard';
 import AnnouncementPopup from '../components/announcementPopup';
 import LoadingOverlay from '../components/ui/loadingOverlay';
+import AdminActionsPopup from '../components/adminActionsPopup';
 
 const socket = io('https://elevat-ed.onrender.com'); // Replace with your server URL
 
@@ -170,8 +171,8 @@ const AdminDashboard = () => {
                         >
                           <div className="flex items-center gap-2">
                             {/* Placeholder for school icon/logo */}
-                            <img src='/profile.png' className="w-8 h-8 rounded-full object-cover"></img>
-                            <h3 className={`truncate max-w-[140px] ${
+                            <img src={`https://txgfvqffljglhgfwrwxn.supabase.co/storage/v1/object/public/schools/${school.toLowerCase().replaceAll(" ", "_")}.png`} className="w-8 h-8 rounded-full object-cover"></img>
+                            <h3 className={`truncate max-w-[120px] ${
                             expandedSchools[school] || selectedSchool == school ? "!text-blue-full" : ""
                           }`}>{school}</h3>
                           </div>
@@ -307,7 +308,10 @@ const AdminDashboard = () => {
             )}
 
             {selectedProject && menuItems[selectedSchool]?.[selectedProject]?.project
-            && <div className='p-4'><ProjectDashboard key={`${selectedSchool}-${selectedProject}`} user={userData} project={menuItems[selectedSchool][selectedProject].project} isLocked={false} viewOnly={true}/></div>
+            && <div className='p-4'>
+              <ProjectDashboard key={`${selectedSchool}-${selectedProject}`} user={userData} project={menuItems[selectedSchool][selectedProject].project} isLocked={false} viewOnly={true}/>
+              <AdminActionsPopup selectedProject={menuItems[selectedSchool][selectedProject].project} />
+              </div>
             }
 
           </div>
