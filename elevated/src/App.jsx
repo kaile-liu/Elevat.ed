@@ -97,26 +97,58 @@ function CustomNavigation({ currentStep, steps, setCurrentStep }) {
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles  }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // Start with null to avoid premature redirects
+  const [state, setState] = useState({ loading: true, user: null, role: null });
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
+      
+      if (!session?.user) {
+        setState({ loading: false, user: null, role: null });
+        return;
+      }
+
+      // Fetch role from users table
+      const { data, error } = await supabase
+        .from("Users")
+        .select("role")
+        .eq("user_id", session.user.id) // assuming `users.id` references `auth.users.id`
+        .single();
+
+      if (error) {
+        console.error("Error fetching role:", error.message);
+      }
+
+      setState({ loading: false, user: session.user, role: data?.role || null });
+
+      // setIsAuthenticated(!!session);
     };
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
+    // const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    //   setIsAuthenticated(!!session);
+    // });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      checkAuth();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  if (isAuthenticated === null) return null; // Prevent rendering until authentication state is confirmed
+  // if (isAuthenticated === null) return null; // Prevent rendering until authentication state is confirmed
+  // return isAuthenticated ? children : <Navigate to="/login" />;
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (state.loading) return null; // or spinner component
+  if (!state.user) {
+    return <Navigate to="/login" />;
+  }
+  if (!allowedRoles.includes(state.role)) {
+    return <Navigate to="/unauthorized" />; // or redirect somewhere safe
+  }
+  return children;
+
 };
 
 
@@ -133,7 +165,7 @@ function App() {
               <Route
                 path="/student"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={["Student"]}>
                     <TourProvider 
                     steps={steps} 
                     components={{ Navigation: CustomNavigation }}
@@ -161,7 +193,7 @@ function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={["Admin"]}>
                     <AdminDashboard />
                   </ProtectedRoute>
                 }
@@ -169,7 +201,7 @@ function App() {
               <Route
                 path="/mentor"
                 element={
-                  <ProtectedRoute>
+                  <ProtectedRoute allowedRoles={["Mentor"]}>
                     <MentorDashboard />
                   </ProtectedRoute>
                 }
@@ -180,6 +212,8 @@ function App() {
               <Route path='/forgot-password' element={<ForgotPassword />}/>
               
               <Route path='/reset-password' element={<ResetPassword />}/>
+
+              <Route path='/unauthorized' element={<Login />}/>
             </Routes>
           </BrowserRouter>
 

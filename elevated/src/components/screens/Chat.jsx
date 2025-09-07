@@ -244,6 +244,7 @@ const Chat = ( { user } ) => {
               placeholder="Enter your message..."
               onChange={(e) => setSupportMessage(e.target.value)}
               value={supportMessage}
+              required
             />
             <label className="block mb-2 text-sm font-medium text-gray-700 cursor-pointer">
               <span className="flex items-center gap-2">
