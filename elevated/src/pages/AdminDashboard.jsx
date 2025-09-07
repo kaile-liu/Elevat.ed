@@ -185,7 +185,7 @@ const AdminDashboard = () => {
                           }`}
                         >
                           <div className="mt-1 flex flex-col gap-1 border-l-2 border-green-med-dark/25">
-                            {Object.keys(menuItems[school]).map((project_id) => {
+                            {Object.keys(menuItems[school]).filter(project_id => menuItems[school][project_id].project.active).map((project_id) => {
                               const { members } = menuItems[school][project_id];
                               return (
                                 <div
