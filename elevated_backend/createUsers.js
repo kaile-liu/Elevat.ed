@@ -76,10 +76,9 @@ async function createMentor( email, password, name, expertise, bio, linkedin ) {
 }
 
 // create project
-// 1. create project record
-async function createProject( school ) {
-    // Insert a corresponding row into Users table.
-    const { data: profileData, error: profileError } = await supabaseAdmin
+async function createProject( school, users ) {
+    // 1. create project record
+    const { data: projectData, error: projectError } = await supabaseAdmin
     .from('Users')
     .insert([
     {
@@ -106,8 +105,22 @@ async function createProject( school ) {
     } else {
         console.log('User profile created successfully:', profileData);
     }
+
+    // 2. add mentor and admin profiles to project_members
+    // for each user to be:
+    const { data: profileData, error: profileError } = await supabaseAdmin
+    .from('Project_members')
+    .insert([
+    {
+       // here
+    },
+    ]);
+    if (profileError) {
+        console.error('Error inserting into custom users table:', profileError);
+    } else {
+        console.log('User profile created successfully:', profileData);
+    }
 }
-// 2. add mentor and admin profiles to project_members
 
 // create student profiles
 // 1. create auth record
