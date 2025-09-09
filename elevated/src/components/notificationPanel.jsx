@@ -75,7 +75,8 @@ const NotificationPanel = ({ anchorEl, open, onClose, notifications, setNotifica
       </div>
 
       {/* Notification List */}
-      <List dense disablePadding>
+      <List dense disablePadding
+      sx={{ maxHeight: '50vh', overflowY: 'auto' }}>
         {notifications.map((notif) => (
           <div key={notif.notification_id}>
             <div className='p-4 flex w-full gap-3 relative'>

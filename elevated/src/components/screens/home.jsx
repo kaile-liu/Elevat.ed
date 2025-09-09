@@ -288,6 +288,22 @@ const Home = ( { user } ) => {
         return `${monthAbbr} ${day} ${timeStr}`;
     };
 
+    function calculateProjectCompletion(projectDates) {
+        const now = new Date(); // current time
+
+        const start = new Date(projectDates.training_start_date);
+        const end = new Date(projectDates.project_end_date);
+
+        if (now < start) return 0; // project hasn’t started yet
+        if (now > end) return 100; // project is complete
+
+        const totalDuration = end - start; // milliseconds
+        const elapsed = now - start; // milliseconds since start
+
+        const percentage = (elapsed / totalDuration) * 100;
+        return Math.round(percentage); // round to nearest integer
+    }
+
 
   return (
     <div className='flex gap-4 min-h-screen p-6 relative'>
@@ -299,7 +315,7 @@ const Home = ( { user } ) => {
             {/* Bento grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
 
-                <BentoBoxSmall classList={'hover:cursor-pointer'} upperText={"Project Cycle"} lowerTextStat={"10%"} lowerTextSub={"complete"} rightIcon={'/graph_curve.png'} hasGradient={true} onClick={() => setProjectCyclePopup(true)}/>
+                <BentoBoxSmall classList={'hover:cursor-pointer'} upperText={"Project Cycle"} lowerTextStat={(projectDates ? calculateProjectCompletion(projectDates) : '0') +'%'} lowerTextSub={"complete"} rightIcon={'/graph_curve.png'} hasGradient={true} onClick={() => setProjectCyclePopup(true)}/>
                 <BentoBoxSmall upperText={"Tasks Completed"} lowerTextStat={tasksDoneByUser} lowerTextSub={"by you"} leftIcon={'/bar_chart.png'}/>
                 <BentoBoxSmall upperText={"Tasks"} lowerTextStat={columns.todo.length + columns.inprogress.length} lowerTextSub={'to do'} leftIcon={'/opportunities.png'}/>
                 <BentoBoxSmall classList={'relative'} upperText={"You endorsed"} lowerTextSub={<span><strong>{lastUserEndorsed ? lastUserEndorsed.name.split(" ")[0] : 'No one'}</strong> this week</span>} rightIcon={lastUserEndorsed ? lastUserEndorsed.pfp ? lastUserEndorsed.pfp : '/profile.png' : '/empty-profile.png'}>

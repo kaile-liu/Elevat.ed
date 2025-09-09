@@ -56,6 +56,7 @@ const Leaderboard = () => {
               Each student can endorse a fellow team member once per week. These are recognition from your peers for your skills and contributions.<br /><br/>
               Badges (+200 pts):<br />
               Every week, mentors will award badges to students in each team who have done particularly well in a specific field. Badges include 'Research Guru', 'Presentation Expert', and 'Team MVP'.<br /><br/> 
+              Additionally, completing project tasks awards each person assigned to the task (+50pts).
               </>
             } className='absolute top-8 left-8'
               slotProps={{
