@@ -90,48 +90,91 @@ app.post('/slack/send-message', async (req, res) => {
   
 // Route 3: Get all messages from a project's channel
 app.get('/slack/messages', async (req, res) => {
-    console.log('endpoint 3: /slack/messages')
-    const { channelName } = req.query // USAGE: GET /slack/messages?channelName=project-group-123
-    console.log(channelName, 'channel')
-    if (!channelName) {
-      return res.status(400).json({ error: 'Missing channel name in query' })
-    }
-    // const channelName = `project-group-${project_id}`
+  const { channelName } = req.query;
+  if (!channelName) {
+    return res.status(400).json({ error: 'Missing channel name in query' });
+  }
 
-    try {
-      // Call the conversations.list method using the built-in WebClient
+  try {
+    let cursor;
+    let foundChannel = null;
+
+    do {
       const result = await slackApp.client.conversations.list({
-        token: process.env.SLACK_BOT_TOKEN
+        token: process.env.SLACK_BOT_TOKEN,
+        limit: 1000,
+        cursor,
+        types: 'public_channel,private_channel', // include private channels
+        exclude_archived: true, // skip archived
       });
-      console.log('channels found: ')
 
-      // find the right channel
-      for (const channel of result.channels) {
-        console.log(channel.name)
-        if (channel.name === channelName) {
-          // Print result
-          console.log("Found conversation ID: " + channel.id);
-          console.log('fetching messages...')
-          // fetch message history from this channel
-          try {
-            const result = await slackApp.client.conversations.history({
-              channel: channel.id,
-            })
-            console.log('fetched all messages:')
-            return res.json({ messages: result.messages })
-          } catch (err) {
-            console.error('Error retrieving messages:', err)
-            return res.status(500).json({ error: 'Failed to retrieve messages' })
-          }
-        }
-      }
+      // Search for channel in this page
+      foundChannel = result.channels.find(c => c.name === channelName);
+      if (foundChannel) break;
 
-      return res.status(400).json({ error: 'Cannot find Channel ID' })
+      cursor = result.response_metadata?.next_cursor;
+    } while (cursor);
+
+    if (!foundChannel) {
+      return res.status(404).json({ error: 'Cannot find Channel ID' });
     }
-    catch (error) {
-      console.error('error finding channel: ', error);
-    }
-  })
+
+    // Fetch messages
+    const history = await slackApp.client.conversations.history({
+      channel: foundChannel.id,
+    });
+
+    return res.json({ messages: history.messages });
+
+  } catch (err) {
+    console.error('Error retrieving messages:', err);
+    return res.status(500).json({ error: 'Failed to retrieve messages' });
+  }
+});
+
+// app.get('/slack/messages', async (req, res) => {
+//     console.log('endpoint 3: /slack/messages')
+//     const { channelName } = req.query // USAGE: GET /slack/messages?channelName=project-group-123
+//     console.log(channelName, 'channel')
+//     if (!channelName) {
+//       return res.status(400).json({ error: 'Missing channel name in query' })
+//     }
+//     // const channelName = `project-group-${project_id}`
+
+//     try {
+//       // Call the conversations.list method using the built-in WebClient
+//       const result = await slackApp.client.conversations.list({
+//         token: process.env.SLACK_BOT_TOKEN
+//       });
+//       console.log('channels found: ')
+
+//       // find the right channel
+//       for (const channel of result.channels) {
+//         console.log(channel.name)
+//         if (channel.name === channelName) {
+//           // Print result
+//           console.log("Found conversation ID: " + channel.id);
+//           console.log('fetching messages...')
+//           // fetch message history from this channel
+//           try {
+//             const result = await slackApp.client.conversations.history({
+//               channel: channel.id,
+//             })
+//             console.log('fetched all messages:')
+//             return res.json({ messages: result.messages })
+//           } catch (err) {
+//             console.error('Error retrieving messages:', err)
+//             return res.status(500).json({ error: 'Failed to retrieve messages' })
+//           }
+//         }
+//       }
+
+//       return res.status(400).json({ error: 'Cannot find Channel ID' })
+//     }
+//     catch (error) {
+//       console.error('error finding channel: ', error);
+//     }
+//   })
 
 // Start the server
 const PORT = process.env.PORT || 3000;
