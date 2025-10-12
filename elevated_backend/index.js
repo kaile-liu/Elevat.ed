@@ -44,7 +44,8 @@ app.post('/slack/create-channel', async (req, res) => {
         name: channelName,
         is_private: false,
       })
-      await slackApp.client.conversations.join({ channel: channelName });
+      const channelId = createRes.channel.id;
+      await slackApp.client.conversations.join({ channel: channelId });
 
       return res.json({
         message: `Channel ${channelName} created successfully.`,

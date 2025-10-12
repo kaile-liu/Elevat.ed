@@ -337,12 +337,33 @@ async function createStudent( student, school ) {
 
 ////////////////////////////////////////////////////////////////////
 
-createProject('Frankfurt International School', [18, 19])
-createStudent({
-    email: 'mdobashi@gsi.edu.qa',
-    name: 'Test Account', 
-    mentor_id: 3, 
-    project_id: 5
-}, 'Example School')
+// createProject('Frankfurt International School', [18, 19])
+// createStudent({
+//     email: 'mdobashi@gsi.edu.qa',
+//     name: 'Test Account', 
+//     mentor_id: 3, 
+//     project_id: 5
+// }, 'Example School')
 
 // deleteUser('0877c85f-bde3-487e-a675-2918b483391f')
+
+
+/// delete after use
+try {
+    const response = await fetch('https://elevat-ed.onrender.com/slack/create-channel', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            channelName: `project-group-7`
+        }),
+    });
+    if (!response.ok) {
+        throw new Error(`Error sending message: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Message sent:', data.message);
+    } catch (err) {
+    console.error('Failed to send message:', err);
+}
