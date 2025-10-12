@@ -8,7 +8,7 @@ import ChatMessage from './chatMessage';
 import LoadingOverlay from './ui/loadingOverlay';
 
 const ProjectChat = ( { project, user, onMessage, messages, members }) => {
-
+    console.log('msgs: ' + messages)
     const [newMessage, setNewMessage] = useState('')
     const chatContainerRef = React.useRef(null);
 

@@ -114,7 +114,7 @@ app.get('/slack/messages', async (req, res) => {
             const result = await slackApp.client.conversations.history({
               channel: channel.id,
             })
-            console.log('fetched all messages: ', result.messages)
+            console.log('fetched all messages:')
             return res.json({ messages: result.messages })
           } catch (err) {
             console.error('Error retrieving messages:', err)
