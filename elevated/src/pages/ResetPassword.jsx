@@ -8,16 +8,23 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const updateSession = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get("code");
+    // const updateSession = async () => {
+    //   const params = new URLSearchParams(window.location.search);
+    //   const code = params.get("code");
 
-      if (!code) return setError("Invalid or missing reset code.");
+    //   if (!code) return setError("Invalid or missing reset code.");
 
-      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) setError(error.message);
-    };
-    updateSession();
+    //   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    //   if (error) setError(error.message);
+    // };
+    // updateSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          console.log("Recovery session established:", session);
+        }
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const handlePasswordChange = async (e) => {

@@ -42,6 +42,7 @@ async function createAuthUser( email, password, name, role, school ) {
         console.error('Error creating user:', error);
     } else {
         console.log('Test user created:', data);
+        console.log('password: ', password)
     }
 
     // Get the new user's ID from the created auth user record.
@@ -296,59 +297,52 @@ async function createStudent( student, school ) {
 // createProject('Frankfurt International School', [25, 19])
 // createProject('Frankfurt International School', [26, 19])
 
-// STUDENTS
-const students = [
-    [
-    'greta_schramm@fis.edu',
-    'jimin_ryu@fis.edu',
-    'peijie_lin@fis.edu',
-    'sumin_hong@fis.edu',
-    'helena_brandt@fis.edu',
-    'moritz_leuthaeuser@fis.edu'
-    ],
-    [
-    'silas_fusco@fis.edu',
-    'yuval_blum@fis.edu',
-    'arjun_paul@fis.edu',
-    'zeynep_durmus@fis.edu',
-    'vivienne_jeschioro@fis.edu',
-    'dila_deniz@fis.edu'
-    ],
-    [
-    'noorain_syed@fis.edu',
-    'theodor_hutter@fis.edu',
-    'arthur_mellor@fis.edu',
-    'cathrin_hofmann@fis.edu',
-    'maria_ryabtseva@fis.edu',
-    'rafael_hall@fis.edu'
-    ]
-]   
-for (const [i, group] of students.entries()) {
-    for (const email of group) {
-        createStudent({
-            email: email, 
-            name: email.split('@')[0].split('_').join(' '), 
-            mentor_id: 4 + i, 
-            project_id: 6 + i
-        }, 'Frankfurt International School')
-    }
-}
+// // STUDENTS
+// const students = [
+//     [
+//     'greta_schramm@fis.edu',
+//     'jimin_ryu@fis.edu',
+//     'peijie_lin@fis.edu',
+//     'sumin_hong@fis.edu',
+//     'helena_brandt@fis.edu',
+//     'moritz_leuthaeuser@fis.edu'
+//     ],
+//     [
+//     'silas_fusco@fis.edu',
+//     'yuval_blum@fis.edu',
+//     'arjun_paul@fis.edu',
+//     'zeynep_durmus@fis.edu',
+//     'vivienne_jeschioro@fis.edu',
+//     'dila_deniz@fis.edu'
+//     ],
+//     [
+//     'noorain_syed@fis.edu',
+//     'theodor_hutter@fis.edu',
+//     'arthur_mellor@fis.edu',
+//     'cathrin_hofmann@fis.edu',
+//     'maria_ryabtseva@fis.edu',
+//     'rafael_hall@fis.edu'
+//     ]
+// ]   
+// for (const [i, group] of students.entries()) {
+//     for (const email of group) {
+//         createStudent({
+//             email: email, 
+//             name: email.split('@')[0].split('_').join(' '), 
+//             mentor_id: 4 + i, 
+//             project_id: 6 + i
+//         }, 'Frankfurt International School')
+//     }
+// }
+
+////////////////////////////////////////////////////////////////////
+
+createProject('Frankfurt International School', [18, 19])
+createStudent({
+    email: 'mdobashi@gsi.edu.qa',
+    name: 'Test Account', 
+    mentor_id: 3, 
+    project_id: 5
+}, 'Example School')
 
 // deleteUser('0877c85f-bde3-487e-a675-2918b483391f')
-// deleteUser('0f508c47-6fa1-4551-8d94-ecd738799b94')
-// deleteUser('27773e27-7562-47a0-a069-b8c7a3d1a35c')
-// deleteUser('28337a06-b18a-43c6-8500-2f9dd379fa8e')
-// deleteUser('2b27e098-ee76-4ad7-9c71-3d24d6224c3f')
-// deleteUser('2e93506f-d812-4ca6-b0e9-8caee6627f7f')
-// deleteUser('356776a0-3eaa-43f2-a4e8-a8a476c851a4')
-// deleteUser('40cdc490-58b8-4893-b032-74b3578bbb1d')
-// deleteUser('50fa8686-506a-4b09-9527-8d91d3b4883c')
-// deleteUser('6c362330-3e4c-4c0a-8ead-48627eb08d67')
-// deleteUser('6f63cffc-7848-4c4b-9da9-ff6e71e4cc62')
-// deleteUser('94d2305a-2c25-4586-85b4-bb7568ed93e8')
-// deleteUser('b6437a34-38ba-4bc0-820b-f1b32cea7dbc')
-// deleteUser('c5d21755-ae6f-45cf-b108-8b4aa49f0d54')
-// deleteUser('d4f2a8fd-e61d-4603-89a8-6c513008a2f2')
-// deleteUser('ec9b457f-c4f3-4756-9577-2f997ca82586')
-// deleteUser('f3f6ce22-857a-498e-aca7-41e082e86cc8')
-// deleteUser('f583e78a-f9fe-4284-a8e8-7d44b5514877')

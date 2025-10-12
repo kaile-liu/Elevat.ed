@@ -165,7 +165,7 @@ const ProjectChat = ( { project, user, onMessage, messages, members }) => {
                       messageText={messageText}
                       isOwnMessage={senderProfileId == user.profile_id}
                       showHeader={showHeader}
-                      widthFull={false}
+                      widthFull={true}
                     />
                   </div>
                 )

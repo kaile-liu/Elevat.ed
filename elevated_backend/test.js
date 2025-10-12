@@ -21,4 +21,4 @@ async function changeUserPassword(userId, newPassword) {
 }
 
 // Usage
-changeUserPassword('21857e31-5deb-4be8-83f3-b27d07198fd9', 'Vivienne_elevated_123');
+changeUserPassword('012ee238-0fe5-4228-a6f7-fb3b0465e5be', 'test_password_client');

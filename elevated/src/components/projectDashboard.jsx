@@ -1,7 +1,7 @@
 import React from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { SquarePen, Upload, FileText, ImageIcon, ExternalLink, X } from 'lucide-react';
+import { SquarePen, Upload, FileText, ImageIcon, ExternalLink, X, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as fetchData from "../utils/fetchData"
 import * as rewards from "../utils/rewards"
@@ -65,6 +65,10 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [activeCard, setActiveCard] = useState(null);
   const [taskCompletePopup, setTaskCompletePopup] = useState(false);
+
+  const [templates, setTemplates] = useState([])
+  const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
 
   // snackbar states
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -168,6 +172,11 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
       } catch (err) {
         console.error('Failed to fetch Slack messages:', err);
       }
+
+      // fetch TEMPLATES
+      const templatesData = await fetchData.selectNoQuery("Templates", "*")
+      console.log(templatesData)
+      setTemplates(templatesData)
     }
     fetchProjectData() 
     
@@ -290,18 +299,24 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
           />
         )}
         {/* Left Section */}
-        <div className="flex-1 flex flex-col relative max-h-[90vh]">
+        <div className="flex-1 flex flex-col relative max-h-[95vh]">
           {project.is_locked && <div className='absolute inset-0 backdrop-blur-sm bg-white/60 z-50 flex flex-col justify-center items-center'>
             <h2>Locked 🔒</h2>
             <p className='text-sm max-w-[60ch] text-center'>You will be assigned your project brief once everyone has completed the 4-week training - then the fun begins!</p>
           </div>}
           {/* Project Info */}
-          <div className="p-4 rounded-xl shadow mb-6 h-48">
+          <div className="p-4 rounded-xl shadow mb-6 flex flex-col">
             <div className="flex gap-4 mb-2">
-              {['Client Overview', 'Project brief'].map((tab) => (
+              {['Client Overview', 'Project brief', 'Templates'].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    if (tab === 'Templates')
+                      setTemplatesOpen(true)
+                    else {
+                      setActiveTab(tab)
+                    } 
+                  }}
                   className={`text-sm font-semibold pb-1 border-b-2 ${
                     activeTab === tab
                       ? 'text-green-full border-green-full'
@@ -337,19 +352,85 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
                   <h2 className="text-xl font-semibold">Project Brief</h2>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-700 line-clamp-3">
-                    {project.project_brief}
+                  <p className="text-sm text-gray-700 line-clamp-2 whitespace-pre-line">
+                    {project.project_brief_preview}
                   </p>
                   <p className='mt-1 cursor-pointer w-full text-right text-sm' onClick={() => setIsOpen(true)}>Read full</p>
                 </div>
               </div>
             )}
 
+            {/* Templates Popup Overlay */}
+            {templatesOpen && (
+              <Popup setIsOpen={setTemplatesOpen} fit={true}>
+                <div className="space-y-4 px-2 w-3xl h-100 overflow-y-scroll">
+                  <h2 className="text-xl font-semibold text-center mb-4">Templates & Resources</h2>
+                  {/* 🔍 Search bar */}
+                  <input
+                    type="text"
+                    placeholder="Search templates..."
+                    value={templateSearchTerm}
+                    onChange={(e) => setTemplateSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2 rounded-full border border-gray-300 focus:ring-2 focus:ring-green-full focus:outline-none text-sm"
+                  />
+
+                  {/* Filtered templates */}
+                  {templates?.length === 0 ? (
+                    <p className="text-center text-gray-500 text-sm mt-4">No templates available yet. Coming soon!</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
+                      {templates
+                        .filter((template) =>
+                          template.name.toLowerCase().includes(templateSearchTerm.toLowerCase())
+                        )
+                        .map((template, index) => {
+                          const bgColors = [
+                            'bg-green-100/70',
+                            'bg-blue-100/70',
+                            'bg-yellow-100/70',
+                            'bg-orange-100/70',
+                          ];
+                          const bgColor = bgColors[index % bgColors.length];
+
+                          return (
+                            <div
+                              key={template.template_id || index}
+                              className={`${bgColor} p-4 rounded-2xl hover:shadow-md hover:scale-102 transition-all flex flex-col justify-between`}
+                            >
+                              <div className="flex flex-col">
+                                <img
+                                  src={template.image}
+                                  alt={template.name}
+                                  className="w-full h-24 object-cover rounded-lg border border-white/30 shadow-sm mb-2"
+                                />
+                                <h3 className="font-semibold text-gray-800 text-sm">{template.name}</h3>
+                                <p className="text-xs text-gray-600 line-clamp-3 min-h-[3.6em]  mb-1">{template.description}</p>
+                                <Download
+                                  onClick={() => {
+                                    const link = document.createElement('a');
+                                    link.href = template.link;
+                                    link.download = template.name || 'template';
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                  }}
+                                  className="text-green-full w-8 h-8 bg-white/95 p-2 rounded-md hover:shadow-lg hover:p-1.5 hover:cursor-pointer transition-all flex-shrink-0"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            )}
+
             {/* Popup Overlay */}
             {isOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/15">
                 {/* Popup Box */}
-                <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6 space-y-4 relative">
+                <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 space-y-4 relative max-h-[75vh] overflow-scroll">
                   <button onClick={() => setIsOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl">&times;</button>
                   {activeTab === 'Client Overview' && (
                     <div className="space-y-4 p-2">
@@ -370,9 +451,14 @@ const ProjectDashboard = ( { user, project, isLocked, viewOnly=false } ) => {
                         <img src='/target.png' width={40}/>
                         <h2 className="text-xl font-semibold">Project Brief</h2>
                       </div>
-                      <p className="text-sm text-gray-700">
-                        {project.project_brief}
-                      </p>
+                      {/* PDF Preview */}
+                      <div className="w-full h-[70vh] border rounded overflow-hidden">
+                        <iframe
+                          src={project.project_brief}
+                          title="Project Brief PDF"
+                          className="w-full h-full"
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

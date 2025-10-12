@@ -308,7 +308,7 @@ const Home = ( { user } ) => {
   return (
     <div className='flex gap-4 min-h-screen p-6 relative'>
         <LoadingOverlay full={false} time={2}/>
-        <div className="flex flex-col text-green-dark">
+        <div className="flex flex-col w-full text-green-dark">
             <p className='text-sm font-medium text-green-med-dark'>Hi {user.name}</p>
             <h1 className="text-2xl font-semibold mb-6">Welcome back,</h1>
 

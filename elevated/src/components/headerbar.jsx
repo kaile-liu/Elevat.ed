@@ -132,7 +132,7 @@ const HeaderBar = ( { setIsProfileBarOpen, user } ) => {
             <div>
               <div
                 onClick={handleTaskOpen}
-                className="flex flex-col items-center cursor-pointer w-28"
+                className="flex flex-col items-center cursor-pointer w-28 hover:bg-black/4"
               >
                 <p className="text-xs font-medium text-green-dark mb-1">Get Started</p>
                 <LinearProgress

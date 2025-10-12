@@ -114,7 +114,7 @@ const TaskCard = ({ task, isDragging=false, isSmall=false, draggable, onDelete }
                 {task.priority}
             </div>
             <p className="font-semibold text-sm line-clamp-1">{task.task_title}</p>
-            {!isSmall && <p className="text-xs text-gray-500 line-clamp-2">{task.task_description}</p>}
+            {!isSmall && <p className="text-xs text-gray-500 line-clamp-2 pr-2">{task.task_description}</p>}
             <div className='absolute top-2 right-6 flex gap-0.5'>
                 {!isSmall && profiles.map((profile) => (
                 <div key={profile.profile_id} className='relative group'>
