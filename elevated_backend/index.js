@@ -102,6 +102,7 @@ app.get('/slack/messages', async (req, res) => {
       const result = await slackApp.client.conversations.list({
         token: process.env.SLACK_BOT_TOKEN
       });
+      console.log('channels found: ' + result.channels)
 
       // find the right channel
       for (const channel of result.channels) {
